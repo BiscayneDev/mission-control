@@ -1,0 +1,68 @@
+[
+  {
+    "id": "task-1",
+    "title": "Research x402 Solana integrations",
+    "description": "Investigate current x402 payment protocol support on Solana and identify integration opportunities.",
+    "column": "in-progress",
+    "priority": "high",
+    "assignee": "scout",
+    "tags": ["x402", "Solana", "Research"],
+    "createdAt": "2026-02-25T10:00:00Z",
+    "updatedAt": "2026-02-27T14:30:00Z"
+  },
+  {
+    "id": "task-2",
+    "title": "Review Superteam Miami PR",
+    "description": "Review and merge the latest pull request for the Superteam Miami project.",
+    "column": "in-review",
+    "priority": "medium",
+    "assignee": "builder",
+    "tags": ["Superteam", "Code Review"],
+    "createdAt": "2026-02-26T09:00:00Z",
+    "updatedAt": "2026-02-27T16:00:00Z"
+  },
+  {
+    "id": "task-3",
+    "title": "Monitor wallet balance",
+    "description": "Set up alerts for wallet balance thresholds across monitored addresses.",
+    "column": "done",
+    "priority": "high",
+    "assignee": "wallet",
+    "tags": ["DeFi", "Monitoring"],
+    "createdAt": "2026-02-20T08:00:00Z",
+    "updatedAt": "2026-02-24T12:00:00Z"
+  },
+  {
+    "id": "task-4",
+    "title": "Draft MoonPay partnership brief",
+    "description": "Prepare a strategic brief outlining partnership opportunities with MoonPay for agent-based payments.",
+    "column": "backlog",
+    "priority": "medium",
+    "assignee": "deal-flow",
+    "tags": ["MoonPay", "Partnerships"],
+    "createdAt": "2026-02-27T11:00:00Z",
+    "updatedAt": "2026-02-27T11:00:00Z"
+  },
+  {
+    "id": "task-5",
+    "title": "Deploy Mission Control v2 dashboard",
+    "description": "Ship the updated mission control dashboard with new pages and improved agent views.",
+    "column": "in-progress",
+    "priority": "high",
+    "assignee": "builder",
+    "tags": ["Dashboard", "Deployment"],
+    "createdAt": "2026-02-26T14:00:00Z",
+    "updatedAt": "2026-02-28T09:00:00Z"
+  },
+  {
+    "id": "task-6",
+    "title": "Scan Agent Land trending projects",
+    "description": "Weekly scan of trending AI agent projects and frameworks across the ecosystem.",
+    "column": "backlog",
+    "priority": "low",
+    "assignee": "scout",
+    "tags": ["Agent Land", "Intel"],
+    "createdAt": "2026-02-28T08:00:00Z",
+    "updatedAt": "2026-02-28T08:00:00Z"
+  }
+]
