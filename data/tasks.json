@@ -64,5 +64,27 @@
     "tags": ["Agent Land", "Intel"],
     "createdAt": "2026-02-28T08:00:00Z",
     "updatedAt": "2026-02-28T08:00:00Z"
+  },
+  {
+    "id": "task-7",
+    "title": "Set up Deal Flow agent",
+    "description": "Research and build out the Deal Flow agent — partnerships, funding radar, MoonPay deals. Same pattern as Scout and Builder.",
+    "column": "backlog",
+    "priority": "medium",
+    "assignee": "vic",
+    "tags": ["Agents", "Deal Flow", "MoonPay"],
+    "createdAt": "2026-02-28T17:00:00Z",
+    "updatedAt": "2026-02-28T17:00:00Z"
+  },
+  {
+    "id": "task-8",
+    "title": "Set up Wallet agent",
+    "description": "Build out the Wallet agent — on-chain ops, MoonPay CLI, x402 payments, Solana monitoring. Research best crypto agent tooling first.",
+    "column": "backlog",
+    "priority": "medium",
+    "assignee": "vic",
+    "tags": ["Agents", "Wallet", "x402", "Solana"],
+    "createdAt": "2026-02-28T17:00:00Z",
+    "updatedAt": "2026-02-28T17:00:00Z"
   }
 ]
