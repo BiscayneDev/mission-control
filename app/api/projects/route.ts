@@ -10,10 +10,13 @@ export async function GET() {
       headers["Authorization"] = `Bearer ${process.env.GITHUB_TOKEN}`
     }
 
-    const res = await fetch(
-      "https://api.github.com/users/BiscayneDev/repos?sort=updated&per_page=20",
-      { headers, next: { revalidate: 300 } }
-    )
+    // Use /user/repos when authenticated (returns private repos too)
+    // Fall back to /users/:username/repos for unauthenticated
+    const endpoint = process.env.GITHUB_TOKEN
+      ? "https://api.github.com/user/repos?sort=updated&per_page=20&affiliation=owner"
+      : "https://api.github.com/users/BiscayneDev/repos?sort=updated&per_page=20"
+
+    const res = await fetch(endpoint, { headers, next: { revalidate: 300 } })
     if (!res.ok) throw new Error(`GitHub API ${res.status}`)
     const data = await res.json()
 
