@@ -124,13 +124,13 @@ export default function TasksPage() {
       </div>
 
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1" style={{ scrollSnapType: "x mandatory" }}>
           {COLUMNS.map(({ id: colId, label }) => {
             const colTasks = tasksByColumn(colId)
             const accent = COLUMN_COLORS[colId]
 
             return (
-              <div key={colId} className="space-y-3">
+              <div key={colId} className="space-y-3 shrink-0" style={{ width: "280px", scrollSnapAlign: "start" }}>
                 {/* Column Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

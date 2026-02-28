@@ -82,7 +82,7 @@ export default function AgentsPage() {
             </div>
             <p className="text-xs text-zinc-500 mt-0.5 truncate">{vic.description}</p>
           </div>
-          <div className="flex gap-1.5 shrink-0">
+          <div className="hidden sm:flex gap-1.5 shrink-0">
             {vic.tags.map((tag) => (
               <span
                 key={tag}
@@ -112,7 +112,7 @@ export default function AgentsPage() {
       </div>
 
       {/* Agent Grid — 2x2 compact */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {agents.map((agent) => (
           <div
             key={agent.name}
