@@ -46,6 +46,36 @@ const agents = [
   },
 ] as const
 
+// Session key → agent display info
+const SESSION_AGENT_MAP: Record<string, { emoji: string; name: string }> = {
+  main: { emoji: "🦞", name: "Vic" },
+  subagent: { emoji: "⚡", name: "Builder" },
+  builder: { emoji: "⚡", name: "Builder" },
+  scout: { emoji: "🔭", name: "Scout" },
+  dealflow: { emoji: "🤝", name: "Deal Flow" },
+  "deal-flow": { emoji: "🤝", name: "Deal Flow" },
+  wallet: { emoji: "💎", name: "Wallet" },
+}
+
+function resolveSession(key: string): { emoji: string; name: string } {
+  const lower = key.toLowerCase()
+  for (const [pattern, info] of Object.entries(SESSION_AGENT_MAP)) {
+    if (lower.includes(pattern)) return info
+  }
+  return { emoji: "🤖", name: key }
+}
+
+interface Session {
+  key?: string
+  id?: string
+  label?: string
+  model?: string
+  status?: string
+  startedAt?: string
+  created_at?: string
+  [key: string]: unknown
+}
+
 interface ActivityEvent {
   id: string
   timestamp: string
@@ -70,11 +100,18 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
+function truncateModel(model: string): string {
+  return model.replace(/^(anthropic|openai|google)\//, "").slice(0, 30)
+}
+
 const PURPLE = "#7c3aed"
+const GREEN = "#22c55e"
 
 export default function AgentsPage() {
   const [activity, setActivity] = useState<ActivityResponse | null>(null)
   const [activityLoading, setActivityLoading] = useState(true)
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(true)
 
   const fetchActivity = useCallback(async () => {
     try {
@@ -88,11 +125,30 @@ export default function AgentsPage() {
     }
   }, [])
 
+  const fetchSessions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/sessions", { cache: "no-store" })
+      const data: { sessions: Session[] } = await res.json()
+      setSessions(data.sessions ?? [])
+    } catch {
+      setSessions([])
+    } finally {
+      setSessionsLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchActivity()
-    const interval = setInterval(fetchActivity, 30_000)
-    return () => clearInterval(interval)
-  }, [fetchActivity])
+    fetchSessions()
+
+    const activityInterval = setInterval(fetchActivity, 30_000)
+    const sessionsInterval = setInterval(fetchSessions, 15_000)
+
+    return () => {
+      clearInterval(activityInterval)
+      clearInterval(sessionsInterval)
+    }
+  }, [fetchActivity, fetchSessions])
 
   const displayEvents = activity?.events?.slice(0, 8) ?? []
 
@@ -208,6 +264,105 @@ export default function AgentsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Live Sessions Panel */}
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          backgroundColor: "#111118",
+          border: `1px solid ${GREEN}28`,
+          boxShadow: `0 0 20px ${GREEN}08`,
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-5 py-3 border-b"
+          style={{ borderColor: `${GREEN}20` }}
+        >
+          <div className="flex items-center gap-2">
+            {/* Pulsing green dot */}
+            <span className="relative flex h-2 w-2">
+              <span
+                className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                style={{ backgroundColor: GREEN }}
+              />
+              <span
+                className="relative inline-flex rounded-full h-2 w-2"
+                style={{ backgroundColor: GREEN }}
+              />
+            </span>
+            <p className="text-xs font-mono uppercase tracking-wider text-zinc-400">
+              Live Sessions
+            </p>
+            {!sessionsLoading && sessions.length > 0 && (
+              <span
+                className="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                style={{ backgroundColor: `${GREEN}20`, color: GREEN }}
+              >
+                {sessions.length}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-zinc-700">refreshes every 15s</p>
+        </div>
+
+        {sessionsLoading ? (
+          <div className="px-5 py-4 text-center">
+            <p className="text-xs text-zinc-600">Connecting to gateway...</p>
+          </div>
+        ) : sessions.length === 0 ? (
+          <div className="px-5 py-4 text-center space-y-0.5">
+            <p className="text-xs text-zinc-500">All quiet</p>
+            <p className="text-xs text-zinc-700">No active sessions right now</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-zinc-800/30">
+            {sessions.map((session, idx) => {
+              const key = session.key ?? session.id ?? session.label ?? String(idx)
+              const { emoji, name } = resolveSession(key)
+              const model = session.model ? truncateModel(String(session.model)) : null
+              const startedAt = session.startedAt ?? session.created_at
+              const status = session.status ?? "active"
+
+              return (
+                <div
+                  key={key}
+                  className="flex items-center gap-3 px-5 py-2.5 hover:bg-white/[0.02] transition-colors"
+                >
+                  <span className="text-base shrink-0">{emoji}</span>
+                  <div className="flex-1 min-w-0 flex items-baseline gap-2 flex-wrap">
+                    <span className="text-xs font-semibold text-zinc-300">{name}</span>
+                    <span className="text-[10px] text-zinc-600 font-mono truncate max-w-[160px]">
+                      {key}
+                    </span>
+                    {model && (
+                      <span className="text-[10px] text-zinc-600 font-mono truncate max-w-[160px]">
+                        · {model}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className="px-2 py-0.5 rounded-full text-[10px] font-medium capitalize"
+                      style={{
+                        backgroundColor: `${GREEN}15`,
+                        color: GREEN,
+                        border: `1px solid ${GREEN}30`,
+                      }}
+                    >
+                      {status}
+                    </span>
+                    {startedAt && (
+                      <span className="text-[10px] text-zinc-700 hidden sm:inline">
+                        {timeAgo(String(startedAt))}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Activity Feed */}
