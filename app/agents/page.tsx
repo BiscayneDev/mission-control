@@ -37,12 +37,12 @@ const agents = [
     description: "Ships code. Builds and maintains projects, automates workflows.",
   },
   {
-    name: "Wallet",
-    emoji: "💎",
-    role: "Crypto Operations",
+    name: "Baron",
+    emoji: "🏦",
+    role: "The Banker",
     accent: "#ec4899",
-    tags: ["x402", "Solana", "MoonPay"],
-    description: "On-chain ops — wallet monitoring, x402 payments, token research.",
+    tags: ["DeFi", "Solana", "Yield"],
+    description: "Protects and compounds on-chain wealth. Monitors positions, manages risk, and finds yield across DeFi.",
   },
 ] as const
 
@@ -54,7 +54,7 @@ const SESSION_AGENT_MAP: Record<string, { emoji: string; name: string }> = {
   scout: { emoji: "🔭", name: "Scout" },
   dealflow: { emoji: "🤝", name: "Deal Flow" },
   "deal-flow": { emoji: "🤝", name: "Deal Flow" },
-  wallet: { emoji: "💎", name: "Wallet" },
+  wallet: { emoji: "🏦", name: "Baron" },
 }
 
 function resolveSession(key: string): { emoji: string; name: string } {

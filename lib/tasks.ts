@@ -26,7 +26,7 @@ export const AGENT_EMOJI: Record<Agent, string> = {
   scout: "🔭",
   "deal-flow": "🤝",
   builder: "⚡",
-  wallet: "💎",
+  wallet: "🏦",
   unassigned: "⚪",
 }
 
@@ -35,7 +35,7 @@ export const AGENT_LABELS: Record<Agent, string> = {
   scout: "Scout",
   "deal-flow": "Deal Flow",
   builder: "Builder",
-  wallet: "Wallet",
+  wallet: "Baron",
   unassigned: "Unassigned",
 }
 
