@@ -21,22 +21,29 @@ git add -A && git commit -m "feat: ..."
 ## Project Structure
 ```
 app/
-  agents/        # Team page — Vic + 4 agents
+  dashboard/     # NEW: Command center overview (default landing page)
+  agents/        # Team page — Vic + 4 agents with live sessions + activity feed
   tasks/         # Kanban board (Backlog/In Progress/In Review/Done)
-  projects/      # GitHub repos (BiscayneDev)
+  projects/      # GitHub repos (BiscayneDev) with PR/CI status + pinned projects
   intel/         # Scout's market intelligence feed
   skills/        # OpenClaw skills list
+  calendar/      # NEW: Google Calendar via gog CLI
   memory/        # Stub
-  calendar/      # Stub
   docs/          # Stub
   settings/      # Stub
   api/
-    tasks/       # CRUD — reads/writes data/tasks.json locally
-    projects/    # GitHub REST API (GITHUB_TOKEN env var)
-    skills/      # openclaw skills list --json (local only)
+    tasks/         # CRUD — reads/writes data/tasks.json locally
+    projects/      # GitHub REST API + gh CLI for PRs/CI status
+    skills/        # openclaw skills list --json (local only)
+    sessions/      # OpenClaw gateway sessions via HTTP
+    activity/      # Activity feed from OpenClaw gateway
+    memory/        # Reads ~/clawd/memory files
+    costs/         # CodexBar usage/cost data
+    standup/       # Daily standup generation
+    calendar/      # NEW: Google Calendar events via gog CLI
     intel/
-      report/    # Reads ~/clawd/agents/scout/reports/latest.json
-      deploy/    # Spawns Scout research script in background
+      report/      # Reads ~/clawd/agents/scout/reports/latest.json
+      deploy/      # Spawns Scout research script in background
 components/
   Sidebar.tsx    # Desktop sidebar + mobile bottom nav (5 items)
 lib/
@@ -45,12 +52,63 @@ data/
   tasks.json     # Local task store (not persisted on Vercel)
 ```
 
+## Pages
+
+### `/dashboard` (default landing page)
+Command center morning briefing overview:
+- **Agent status row** — 5 agents (Vic/Scout/Deal Flow/Builder/Baron) with live pulsing dot if session active
+- **Task summary** — counts by column (Backlog / In Progress / In Review / Done)
+- **Projects health** — 4 pinned repos with CI color dot + PR count + last updated
+- **Recent intel** — last Scout report timestamp + 1-sentence summary
+- **Quick actions** — Deploy Scout, New Task, GitHub link, Vercel link
+
+### `/agents`
+Full team page with Vic hero card, 2x2 agent grid, live sessions panel, activity feed.
+
+### `/tasks`
+Kanban board with drag-and-drop ([@hello-pangea/dnd](https://github.com/hello-pangea/dnd)).
+
+### `/projects`
+GitHub repos with:
+- **Pinned projects** section at top (shipyard, mission-control, superteam-miami, arken)
+- PR count badge (amber) for repos with open PRs
+- CI status indicator (green/red/amber pulsing) via gh CLI
+- Custom fallback descriptions for known projects
+
+### `/calendar`
+Google Calendar upcoming events:
+- Fetched via `gog` CLI (`/opt/homebrew/bin/gog`)
+- Grouped by day with cyan accent
+- Shows time, title, location
+- Empty state if no events or CLI unavailable
+
+### `/intel`
+Scout's market intelligence reports with deploy button.
+
+## API Routes
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/tasks` | GET/POST | Task CRUD |
+| `/api/tasks/[id]` | PATCH/DELETE | Individual task ops |
+| `/api/projects` | GET | GitHub repos + PR/CI data for pinned repos |
+| `/api/sessions` | GET | Active OpenClaw sessions via gateway |
+| `/api/activity` | GET | Recent agent activity feed |
+| `/api/memory` | GET | Agent memory files |
+| `/api/costs` | GET | CodexBar usage/cost data |
+| `/api/standup` | GET | Daily standup |
+| `/api/calendar` | GET | Google Calendar events via gog CLI |
+| `/api/skills` | GET | Installed OpenClaw skills |
+| `/api/intel/report` | GET | Latest Scout report |
+| `/api/intel/deploy` | POST | Deploy Scout research run |
+
 ## Architecture Notes
-- **API routes with CLIs** must use full binary paths: `/opt/homebrew/bin/openclaw`, `/opt/homebrew/bin/gh` — Next.js doesn't inherit shell PATH
-- **Vercel detection:** `process.env.VERCEL` — skills page and deploy route gracefully degrade on Vercel
-- **Tasks persistence:** Currently local JSON (not persisted on Vercel). If adding DB: use Vercel KV
-- **Mobile:** Bottom nav bar (5 items), sidebar hidden on mobile (`md:hidden`)
+- **API routes with CLIs** must use full binary paths: `/opt/homebrew/bin/openclaw`, `/opt/homebrew/bin/gh`, `/opt/homebrew/bin/gog` — Next.js doesn't inherit shell PATH
+- **Vercel detection:** `process.env.VERCEL` — skills, calendar, and deploy routes gracefully degrade on Vercel
+- **Tasks persistence:** Local JSON (not persisted on Vercel). If adding DB: use Vercel KV
+- **Mobile:** Bottom nav bar (5 items: Dashboard, Tasks, Projects, Intel, Costs), sidebar hidden on mobile (`md:hidden`)
 - **Kanban:** Uses `@hello-pangea/dnd` for drag-and-drop
+- **PR/CI:** Only fetched for pinned repos (to avoid gh rate limits). Uses `execFile` with 8s timeout
 
 ## Agents in the App
 | Agent | Emoji | Color |
@@ -59,7 +117,14 @@ data/
 | Scout | 🔭 | #06b6d4 (cyan) |
 | Deal Flow | 🤝 | #f59e0b (amber) |
 | Builder | ⚡ | #10b981 (emerald) |
-| Wallet | 💎 | #ec4899 (pink) |
+| Baron | 🏦 | #ec4899 (pink) |
+
+## Pinned Projects
+These always appear at the top of `/projects`, in this order:
+1. **shipyard** — "API marketplace for autonomous AI agents"
+2. **mission-control** — "Personal AI command center"
+3. **superteam-miami** — "Solana community hub for Miami"
+4. **arken** — "Real-time financial news terminal + prediction markets"
 
 ## Env Vars (Vercel)
 - `GITHUB_TOKEN` — GitHub PAT for private repo access in Projects page

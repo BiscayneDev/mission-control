@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  LayoutDashboard,
   Users,
   CheckSquare,
   Folder,
@@ -16,21 +17,22 @@ import {
 } from "lucide-react";
 
 const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agents", label: "Agents", icon: Users },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/projects", label: "Projects", icon: Folder },
   { href: "/intel", label: "Intel", icon: Zap },
   { href: "/costs", label: "Costs", icon: TrendingUp },
-  { href: "/memory", label: "Memory", icon: Brain },
   { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/memory", label: "Memory", icon: Brain },
   { href: "/docs", label: "Docs", icon: FileText },
   { href: "/skills", label: "Skills", icon: Sparkles },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
-// Bottom nav items (most important 5 for mobile)
+// Bottom nav items (most important 5 for mobile): Dashboard, Tasks, Projects, Intel, Costs
 const mobileNavItems = [
-  { href: "/agents", label: "Agents", icon: Users },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/projects", label: "Projects", icon: Folder },
   { href: "/intel", label: "Intel", icon: Zap },
@@ -64,7 +66,7 @@ export function Sidebar() {
 
         <nav className="flex flex-col gap-1 w-full">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname.startsWith(href);
+            const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
             return (
               <Link
                 key={href}
@@ -93,7 +95,7 @@ export function Sidebar() {
         }}
       >
         {mobileNavItems.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname.startsWith(href);
+          const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
           return (
             <Link
               key={href}
