@@ -1,3 +1,7 @@
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+
 const vic = {
   name: "Vic",
   emoji: "🦞",
@@ -42,7 +46,56 @@ const agents = [
   },
 ] as const
 
+interface ActivityEvent {
+  id: string
+  timestamp: string
+  agentEmoji: string
+  agentName: string
+  action: string
+  detail: string
+}
+
+interface ActivityResponse {
+  events: ActivityEvent[]
+  lastUpdated: string | null
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 2) return "just now"
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
+}
+
+const PURPLE = "#7c3aed"
+
 export default function AgentsPage() {
+  const [activity, setActivity] = useState<ActivityResponse | null>(null)
+  const [activityLoading, setActivityLoading] = useState(true)
+
+  const fetchActivity = useCallback(async () => {
+    try {
+      const res = await fetch("/api/activity", { cache: "no-store" })
+      const data: ActivityResponse = await res.json()
+      setActivity(data)
+    } catch {
+      // ignore
+    } finally {
+      setActivityLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchActivity()
+    const interval = setInterval(fetchActivity, 30_000)
+    return () => clearInterval(interval)
+  }, [fetchActivity])
+
+  const displayEvents = activity?.events?.slice(0, 8) ?? []
+
   return (
     <div className="max-w-5xl mx-auto space-y-4 h-full">
       {/* Mission Banner — compact */}
@@ -155,6 +208,70 @@ export default function AgentsPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Activity Feed */}
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          backgroundColor: "#111118",
+          border: `1px solid ${PURPLE}28`,
+          boxShadow: `0 0 20px ${PURPLE}08`,
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-5 py-3 border-b"
+          style={{ borderColor: `${PURPLE}20` }}
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: PURPLE, boxShadow: `0 0 6px ${PURPLE}` }}
+            />
+            <p className="text-xs font-mono uppercase tracking-wider text-zinc-400">
+              Activity Feed
+            </p>
+          </div>
+          {activity?.lastUpdated && (
+            <p className="text-xs text-zinc-700">
+              updated {timeAgo(activity.lastUpdated)}
+            </p>
+          )}
+        </div>
+
+        {activityLoading ? (
+          <div className="px-5 py-6 text-center">
+            <p className="text-xs text-zinc-600">Loading activity...</p>
+          </div>
+        ) : displayEvents.length === 0 ? (
+          <div className="px-5 py-6 text-center space-y-1">
+            <p className="text-xs text-zinc-500">No recent activity</p>
+            <p className="text-xs text-zinc-700">Events appear as agents run</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-zinc-800/30">
+            {displayEvents.map((event) => (
+              <div
+                key={event.id}
+                className="flex items-start gap-3 px-5 py-2.5 hover:bg-white/[0.02] transition-colors"
+              >
+                <span className="text-base shrink-0 mt-0.5">{event.agentEmoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-1.5 flex-wrap">
+                    <span className="text-xs font-semibold text-zinc-300">{event.agentName}</span>
+                    <span className="text-xs text-zinc-500">{event.action}</span>
+                    {event.detail && (
+                      <span className="text-xs text-zinc-700 truncate max-w-[200px]">
+                        · {event.detail}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-700 mt-0.5">{timeAgo(event.timestamp)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

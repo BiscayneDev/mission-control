@@ -33,6 +33,12 @@ interface ScoutReport {
   rawOutput?: string
 }
 
+interface StandupData {
+  date: string
+  entries: string[]
+  filesRead: string[]
+}
+
 const SIGNAL_COLORS: Record<string, string> = {
   high: "#ef4444",
   medium: "#f59e0b",
@@ -46,6 +52,8 @@ const TOPIC_COLORS: Record<string, string> = {
   "crypto agent skills": "#f59e0b",
 }
 
+const EMERALD = "#10b981"
+
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
@@ -55,10 +63,92 @@ function timeAgo(iso: string) {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
+function StandupCard({ data }: { data: StandupData | null }) {
+  const [open, setOpen] = useState(false)
+
+  if (!data) return null
+
+  const hasEntries = data.entries.length > 0
+  const isSeparator = (e: string) => e.startsWith("---") && e.endsWith("---")
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{
+        backgroundColor: "#111118",
+        border: `1px solid ${EMERALD}28`,
+        boxShadow: open ? `0 0 20px ${EMERALD}08` : undefined,
+      }}
+    >
+      <button
+        className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-white/[0.02] transition-colors"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <div className="flex items-center gap-2">
+          <span
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: EMERALD, boxShadow: `0 0 6px ${EMERALD}` }}
+          />
+          <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">
+            Daily Standup
+          </span>
+          <span className="text-xs text-zinc-600">· from memory logs</span>
+          {data.filesRead.length > 0 && (
+            <span
+              className="text-xs px-2 py-0.5 rounded-full ml-1"
+              style={{ backgroundColor: `${EMERALD}15`, color: EMERALD }}
+            >
+              {data.filesRead.length} file{data.filesRead.length !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        <span
+          className="text-xs transition-transform duration-200"
+          style={{
+            color: EMERALD,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            display: "inline-block",
+          }}
+        >
+          ▾
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-5 pb-4 space-y-1 border-t border-zinc-800/50 pt-3">
+          {!hasEntries ? (
+            <p className="text-xs text-zinc-600">
+              No daily notes found for today or yesterday in{" "}
+              <code className="text-zinc-500">~/clawd/memory/</code>
+            </p>
+          ) : (
+            data.entries.map((entry, i) => (
+              isSeparator(entry) ? (
+                <p
+                  key={i}
+                  className="text-xs font-mono text-zinc-600 pt-2 pb-1"
+                >
+                  {entry.replace(/^--- /, "").replace(/ ---$/, "")}
+                </p>
+              ) : (
+                <div key={i} className="flex items-start gap-2">
+                  <span style={{ color: EMERALD }} className="text-xs shrink-0 mt-0.5">·</span>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{entry}</p>
+                </div>
+              )
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function IntelPage() {
   const [report, setReport] = useState<ScoutReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [deploying, setDeploying] = useState(false)
+  const [standup, setStandup] = useState<StandupData | null>(null)
 
   const fetchReport = useCallback(async () => {
     try {
@@ -72,7 +162,14 @@ export default function IntelPage() {
     }
   }, [])
 
-  useEffect(() => { fetchReport() }, [fetchReport])
+  useEffect(() => {
+    fetchReport()
+    // Fetch standup data
+    fetch("/api/standup")
+      .then((r) => r.json())
+      .then((d: StandupData) => setStandup(d))
+      .catch(() => {})
+  }, [fetchReport])
 
   const hasReport = report?.generatedAt != null && (report?.sections?.length ?? 0) > 0
 
@@ -260,6 +357,9 @@ export default function IntelPage() {
           )}
         </>
       )}
+
+      {/* Standup Report — always shown below Scout section */}
+      <StandupCard data={standup} />
     </div>
   )
 }

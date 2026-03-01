@@ -12,6 +12,7 @@ import {
   FileText,
   Sparkles,
   Settings,
+  TrendingUp,
 } from "lucide-react";
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/projects", label: "Projects", icon: Folder },
   { href: "/intel", label: "Intel", icon: Zap },
+  { href: "/costs", label: "Costs", icon: TrendingUp },
   { href: "/memory", label: "Memory", icon: Brain },
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/docs", label: "Docs", icon: FileText },
@@ -32,7 +34,7 @@ const mobileNavItems = [
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/projects", label: "Projects", icon: Folder },
   { href: "/intel", label: "Intel", icon: Zap },
-  { href: "/skills", label: "Skills", icon: Sparkles },
+  { href: "/costs", label: "Costs", icon: TrendingUp },
 ];
 
 export function Sidebar() {
