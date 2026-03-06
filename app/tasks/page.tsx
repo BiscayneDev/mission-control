@@ -57,8 +57,9 @@ interface TaskCardProps {
   innerRef: (element: HTMLElement | null) => void
 }
 
-function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, innerRef }: TaskCardProps) {
+function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, innerRef, onDelete }: TaskCardProps & { onDelete: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const hasDescription = Boolean(task.description && task.description.trim().length > 0)
 
   return (
@@ -66,7 +67,7 @@ function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, i
       ref={innerRef}
       {...draggableProps}
       {...dragHandleProps}
-      className="rounded-lg p-4 space-y-3 transition-shadow"
+      className="group rounded-lg p-4 space-y-3 transition-shadow"
       style={{
         backgroundColor: "#111118",
         border: `1px solid ${isDragging ? `${accent}60` : "#1a1a2e"}`,
@@ -124,15 +125,34 @@ function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, i
           </span>
         </div>
 
-        <span
-          className="text-xs px-2 py-0.5 rounded-full font-medium"
-          style={{
-            backgroundColor: `${PRIORITY_CONFIG[task.priority].color}20`,
-            color: PRIORITY_CONFIG[task.priority].color,
-          }}
-        >
-          {PRIORITY_CONFIG[task.priority].label}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="text-xs px-2 py-0.5 rounded-full font-medium"
+            style={{
+              backgroundColor: `${PRIORITY_CONFIG[task.priority].color}20`,
+              color: PRIORITY_CONFIG[task.priority].color,
+            }}
+          >
+            {PRIORITY_CONFIG[task.priority].label}
+          </span>
+          <button
+            onClick={async (e) => {
+              e.stopPropagation()
+              if (deleting) return
+              setDeleting(true)
+              try {
+                await fetch(`/api/tasks/${task.id}`, { method: "DELETE" })
+                onDelete(task.id)
+              } catch {
+                setDeleting(false)
+              }
+            }}
+            className="opacity-0 group-hover:opacity-100 text-zinc-700 hover:text-red-400 transition-all text-xs leading-none px-1"
+            title="Delete task"
+          >
+            {deleting ? "…" : "✕"}
+          </button>
+        </div>
       </div>
 
       {task.tags.length > 0 && (
@@ -338,6 +358,7 @@ export default function TasksPage() {
                               draggableProps={provided.draggableProps}
                               dragHandleProps={provided.dragHandleProps}
                               innerRef={provided.innerRef}
+                              onDelete={(id) => setTasks((prev) => prev.filter((t) => t.id !== id))}
                             />
                           )}
                         </Draggable>
