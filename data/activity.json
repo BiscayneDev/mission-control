@@ -1,5 +1,22 @@
 [
   {
+    "id": "cf368702-2d00-43ae-a6b8-4d1a1f9d9140",
+    "taskId": "task-1772775804559",
+    "taskTitle": "Add agent CRUD",
+    "agent": "builder",
+    "action": "completed",
+    "summary": "Full agent create/edit/delete with persistent JSON storage and modal UI",
+    "timestamp": "2026-03-06T05:49:11.628Z"
+  },
+  {
+    "id": "489882ef-a40b-47a0-935a-b7449e9436ce",
+    "taskId": "task-1772775804559",
+    "taskTitle": "Add agent CRUD — edit, delete, create on agents page",
+    "agent": "builder",
+    "action": "completed",
+    "timestamp": "2026-03-06T05:49:11.578Z"
+  },
+  {
     "id": "8e808d07-9c51-421c-a547-782e0f9e7ecb",
     "taskId": "task-1772775804559",
     "taskTitle": "Add agent CRUD — edit, delete, create on agents page",

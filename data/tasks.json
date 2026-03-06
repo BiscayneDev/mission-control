@@ -105,8 +105,8 @@
   {
     "id": "task-1772775804559",
     "title": "Add agent CRUD — edit, delete, create on agents page",
-    "description": "Full agent management: edit agent name/role/description/color, delete agents, create new ones. Persistent storage.",
-    "column": "in-progress",
+    "description": "✅ Agent CRUD built — edit, delete, create with persistent storage",
+    "column": "done",
     "priority": "high",
     "assignee": "builder",
     "tags": [
@@ -114,6 +114,6 @@
       "agents"
     ],
     "createdAt": "2026-03-06T05:43:24.559Z",
-    "updatedAt": "2026-03-06T05:43:24.559Z"
+    "updatedAt": "2026-03-06T05:49:11.576Z"
   }
 ]
