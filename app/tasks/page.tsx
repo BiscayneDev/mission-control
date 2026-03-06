@@ -57,9 +57,31 @@ interface TaskCardProps {
   innerRef: (element: HTMLElement | null) => void
 }
 
-function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, innerRef, onDelete }: TaskCardProps & { onDelete: (id: string) => void }) {
+function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, innerRef, onDelete, onUpdate }: TaskCardProps & { onDelete: (id: string) => void; onUpdate: (id: string, updates: Partial<Task>) => void }) {
   const [expanded, setExpanded] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(task.title)
+  const [editDesc, setEditDesc] = useState(task.description ?? "")
+  const [editPriority, setEditPriority] = useState<Priority>(task.priority)
+  const [editAssignee, setEditAssignee] = useState<Agent>(task.assignee)
+  const [saving, setSaving] = useState(false)
+
+  const saveEdit = async () => {
+    setSaving(true)
+    const updates = { title: editTitle, description: editDesc, priority: editPriority, assignee: editAssignee }
+    try {
+      await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      })
+      onUpdate(task.id, updates)
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
   const hasDescription = Boolean(task.description && task.description.trim().length > 0)
 
   return (
@@ -136,6 +158,13 @@ function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, i
             {PRIORITY_CONFIG[task.priority].label}
           </span>
           <button
+            onClick={(e) => { e.stopPropagation(); setEditing(true); setEditTitle(task.title); setEditDesc(task.description ?? ""); setEditPriority(task.priority); setEditAssignee(task.assignee) }}
+            className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-zinc-300 transition-all text-xs leading-none px-1"
+            title="Edit task"
+          >
+            ✎
+          </button>
+          <button
             onClick={async (e) => {
               e.stopPropagation()
               if (deleting) return
@@ -154,6 +183,96 @@ function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, i
           </button>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setEditing(false) }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl p-6 space-y-4"
+            style={{ backgroundColor: "#111118", border: "1px solid #1a1a2e" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-bold text-white">Edit Task</h3>
+
+            <div className="space-y-1">
+              <label className="text-xs text-zinc-500">Title</label>
+              <input
+                className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                style={{ backgroundColor: "#0a0a0f", border: "1px solid #1a1a2e" }}
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-zinc-500">Description</label>
+              <textarea
+                className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none resize-none"
+                style={{ backgroundColor: "#0a0a0f", border: "1px solid #1a1a2e" }}
+                rows={5}
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                placeholder="Add details, context, or instructions for the agent..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-zinc-500">Priority</label>
+                <select
+                  className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                  style={{ backgroundColor: "#0a0a0f", border: "1px solid #1a1a2e" }}
+                  value={editPriority}
+                  onChange={(e) => setEditPriority(e.target.value as Priority)}
+                >
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-zinc-500">Assignee</label>
+                <select
+                  className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                  style={{ backgroundColor: "#0a0a0f", border: "1px solid #1a1a2e" }}
+                  value={editAssignee}
+                  onChange={(e) => setEditAssignee(e.target.value as Agent)}
+                >
+                  <option value="vic">🦞 Vic</option>
+                  <option value="scout">🔭 Scout</option>
+                  <option value="builder">⚡ Builder</option>
+                  <option value="deal-flow">🤝 Deal Flow</option>
+                  <option value="baron">🏦 Baron</option>
+                  <option value="unassigned">⚪ Unassigned</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={saveEdit}
+                disabled={saving || !editTitle.trim()}
+                className="flex-1 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{ backgroundColor: "#7c3aed", color: "white", opacity: saving || !editTitle.trim() ? 0.5 : 1 }}
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                style={{ backgroundColor: "#1a1a2e" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {task.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -374,6 +493,7 @@ export default function TasksPage() {
                               dragHandleProps={provided.dragHandleProps}
                               innerRef={provided.innerRef}
                               onDelete={(id) => setTasks((prev) => prev.filter((t) => t.id !== id))}
+                              onUpdate={(id, updates) => setTasks((prev) => prev.map((t) => t.id === id ? { ...t, ...updates } : t))}
                             />
                           )}
                         </Draggable>
