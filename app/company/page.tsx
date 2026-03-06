@@ -1,0 +1,514 @@
+"use client"
+
+import { useEffect, useState, useCallback } from "react"
+import Link from "next/link"
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface AgentBudget {
+  name: string
+  emoji: string
+  accent: string
+  spentUsd: number
+  budgetUsd: number
+  tokens: number
+}
+
+interface Goal {
+  id: string
+  title: string
+  description?: string
+  status: "active" | "completed" | "paused"
+  priority: "high" | "medium" | "low"
+  assignedTo?: string
+  createdAt?: string
+}
+
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const AGENT_EMOJI: Record<string, string> = {
+  vic: "🦞",
+  scout: "🔭",
+  builder: "⚡",
+  "deal-flow": "🤝",
+  baron: "🏦",
+}
+
+const PRIORITY_COLOR: Record<string, string> = {
+  high: "#ef4444",
+  medium: "#f59e0b",
+  low: "#22c55e",
+}
+
+const STATUS_CYCLE: Record<Goal["status"], Goal["status"]> = {
+  active: "completed",
+  completed: "paused",
+  paused: "active",
+}
+
+const STATUS_STYLE: Record<Goal["status"], { bg: string; color: string; label: string }> = {
+  active: { bg: "rgba(16,185,129,0.15)", color: "#10b981", label: "Active" },
+  completed: { bg: "rgba(34,197,94,0.12)", color: "#22c55e", label: "Done" },
+  paused: { bg: "rgba(113,113,122,0.15)", color: "#71717a", label: "Paused" },
+}
+
+// ── Budget progress bar color ──────────────────────────────────────────────────
+
+function budgetColor(pct: number): string {
+  if (pct >= 85) return "#ef4444"
+  if (pct >= 60) return "#f59e0b"
+  return "#22c55e"
+}
+
+// ── Org Chart ─────────────────────────────────────────────────────────────────
+
+function OrgChart() {
+  const agents = [
+    { name: "Scout", emoji: "🔭", role: "Market Intelligence", accent: "#06b6d4" },
+    { name: "Builder", emoji: "⚡", role: "CTO · Engineering", accent: "#10b981" },
+    { name: "Deal Flow", emoji: "🤝", role: "Partnership Radar", accent: "#f59e0b" },
+    { name: "Baron", emoji: "🏦", role: "The Banker", accent: "#ec4899" },
+  ]
+
+  return (
+    <div className="flex flex-col items-center gap-0">
+      {/* Halsey */}
+      <div
+        className="rounded-xl px-6 py-4 flex flex-col items-center gap-1 min-w-[160px]"
+        style={{ backgroundColor: "#1a1a2e", border: "1px solid #2a2a4e" }}
+      >
+        <span className="text-2xl">👤</span>
+        <p className="text-sm font-bold text-white">Halsey</p>
+        <p className="text-[11px] text-zinc-400">Board</p>
+      </div>
+
+      {/* Connector line down to Vic */}
+      <div className="w-px h-6" style={{ backgroundColor: "#2a2a4e" }} />
+
+      {/* Vic */}
+      <div
+        className="rounded-xl px-6 py-4 flex flex-col items-center gap-1 min-w-[180px]"
+        style={{
+          backgroundColor: "#1a1a2e",
+          border: "1px solid rgba(124,58,237,0.4)",
+          boxShadow: "0 0 20px rgba(124,58,237,0.1)",
+        }}
+      >
+        <span className="text-2xl">🦞</span>
+        <p className="text-sm font-bold" style={{ color: "#a78bfa" }}>Vic</p>
+        <p className="text-[11px] text-zinc-400">Chief of Staff · Orchestrator</p>
+      </div>
+
+      {/* Connector line down to agents row */}
+      <div className="w-px h-6" style={{ backgroundColor: "#2a2a4e" }} />
+
+      {/* Horizontal connector spanning agent row */}
+      <div className="relative flex items-start justify-center w-full max-w-2xl">
+        {/* Top horizontal bar */}
+        <div
+          className="absolute top-0 left-[12.5%] right-[12.5%] h-px"
+          style={{ backgroundColor: "#2a2a4e" }}
+        />
+
+        {/* Agent cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full pt-6">
+          {agents.map((agent) => (
+            <div key={agent.name} className="flex flex-col items-center gap-0">
+              {/* Vertical line down from horizontal bar */}
+              <div className="w-px h-6" style={{ backgroundColor: "#2a2a4e" }} />
+              <div
+                className="rounded-xl px-3 py-4 flex flex-col items-center gap-1 w-full"
+                style={{
+                  backgroundColor: "#1a1a2e",
+                  border: `1px solid ${agent.accent}33`,
+                  boxShadow: `0 0 12px ${agent.accent}0d`,
+                }}
+              >
+                <span className="text-2xl">{agent.emoji}</span>
+                <p className="text-xs font-bold" style={{ color: agent.accent }}>{agent.name}</p>
+                <p className="text-[10px] text-zinc-500 text-center leading-tight">{agent.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Add Goal Form ─────────────────────────────────────────────────────────────
+
+interface AddGoalFormProps {
+  onAdd: (goal: Goal) => void
+  onCancel: () => void
+}
+
+function AddGoalForm({ onAdd, onCancel }: AddGoalFormProps) {
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [priority, setPriority] = useState<Goal["priority"]>("medium")
+  const [assignedTo, setAssignedTo] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!title.trim()) return
+    setLoading(true)
+    try {
+      const res = await fetch("/api/company/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, priority, assignedTo: assignedTo || undefined }),
+      })
+      if (res.ok) {
+        const goal = await res.json() as Goal
+        onAdd(goal)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      className="rounded-xl p-4 space-y-3"
+      style={{ backgroundColor: "#0d0d18", border: "1px solid rgba(124,58,237,0.3)" }}
+    >
+      <p className="text-xs font-semibold" style={{ color: "#a78bfa" }}>New Goal</p>
+      <input
+        className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:ring-1"
+        style={{ backgroundColor: "#111118", border: "1px solid #2a2a4e" }}
+        placeholder="Goal title..."
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        autoFocus
+      />
+      <input
+        className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none"
+        style={{ backgroundColor: "#111118", border: "1px solid #2a2a4e" }}
+        placeholder="Description (optional)"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+      <div className="flex gap-2">
+        <select
+          className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none"
+          style={{ backgroundColor: "#111118", border: "1px solid #2a2a4e" }}
+          value={priority}
+          onChange={(e) => setPriority(e.target.value as Goal["priority"])}
+        >
+          <option value="high">High Priority</option>
+          <option value="medium">Medium Priority</option>
+          <option value="low">Low Priority</option>
+        </select>
+        <select
+          className="flex-1 rounded-lg px-3 py-2 text-sm text-white outline-none"
+          style={{ backgroundColor: "#111118", border: "1px solid #2a2a4e" }}
+          value={assignedTo}
+          onChange={(e) => setAssignedTo(e.target.value)}
+        >
+          <option value="">No agent</option>
+          <option value="vic">🦞 Vic</option>
+          <option value="scout">🔭 Scout</option>
+          <option value="builder">⚡ Builder</option>
+          <option value="deal-flow">🤝 Deal Flow</option>
+          <option value="baron">🏦 Baron</option>
+        </select>
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={loading || !title.trim()}
+          className="px-4 py-2 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-50"
+          style={{ backgroundColor: "#7c3aed", color: "white" }}
+        >
+          {loading ? "Adding..." : "Add Goal"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+          style={{ backgroundColor: "#1a1a2e" }}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  )
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
+export default function CompanyPage() {
+  const [budgets, setBudgets] = useState<AgentBudget[]>([])
+  const [goals, setGoals] = useState<Goal[]>([])
+  const [loadingBudgets, setLoadingBudgets] = useState(true)
+  const [loadingGoals, setLoadingGoals] = useState(true)
+  const [showAddGoal, setShowAddGoal] = useState(false)
+
+  const fetchBudgets = useCallback(async () => {
+    try {
+      const res = await fetch("/api/company/budgets", { cache: "no-store" })
+      const data = await res.json() as { agents: AgentBudget[] }
+      setBudgets(data.agents ?? [])
+    } catch {
+      // leave empty
+    } finally {
+      setLoadingBudgets(false)
+    }
+  }, [])
+
+  const fetchGoals = useCallback(async () => {
+    try {
+      const res = await fetch("/api/company/goals", { cache: "no-store" })
+      const data = await res.json() as Goal[]
+      setGoals(Array.isArray(data) ? data : [])
+    } catch {
+      // leave empty
+    } finally {
+      setLoadingGoals(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchBudgets()
+    fetchGoals()
+  }, [fetchBudgets, fetchGoals])
+
+  async function cycleGoalStatus(goal: Goal) {
+    const nextStatus = STATUS_CYCLE[goal.status]
+    setGoals((prev) => prev.map((g) => g.id === goal.id ? { ...g, status: nextStatus } : g))
+    try {
+      await fetch(`/api/company/goals/${goal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      })
+    } catch {
+      // revert on error
+      setGoals((prev) => prev.map((g) => g.id === goal.id ? goal : g))
+    }
+  }
+
+  function handleGoalAdded(goal: Goal) {
+    setGoals((prev) => [...prev, goal])
+    setShowAddGoal(false)
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8 pb-16">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-white">Company</h1>
+        <p className="text-sm text-zinc-500 mt-1">Biscayne Ventures · AI × Crypto</p>
+      </div>
+
+      {/* ── Section 1: Mission Statement ─────────────────────────── */}
+      <section className="space-y-3">
+        <p className="text-xs font-mono uppercase tracking-widest text-zinc-600">Mission</p>
+        <div
+          className="rounded-2xl p-6 space-y-4"
+          style={{
+            backgroundColor: "#111118",
+            border: "1px solid rgba(124,58,237,0.3)",
+            boxShadow: "0 0 40px rgba(124,58,237,0.06)",
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <div
+              className="w-1 h-8 rounded-full"
+              style={{ backgroundColor: "#7c3aed" }}
+            />
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#7c3aed" }}>
+                Biscayne Ventures · AI × Crypto
+              </p>
+            </div>
+          </div>
+          <blockquote className="text-lg font-medium text-white leading-relaxed pl-3">
+            &ldquo;Build an unfair advantage at the AI × crypto frontier — staying ahead of deals, protocols, and agent economies while automating everything that doesn&apos;t need Halsey in it.&rdquo;
+          </blockquote>
+        </div>
+      </section>
+
+      {/* ── Section 2: Org Chart ──────────────────────────────────── */}
+      <section className="space-y-3">
+        <p className="text-xs font-mono uppercase tracking-widest text-zinc-600">Org Chart</p>
+        <div
+          className="rounded-2xl p-8"
+          style={{ backgroundColor: "#111118", border: "1px solid #1a1a2e" }}
+        >
+          <OrgChart />
+        </div>
+      </section>
+
+      {/* ── Section 3: Agent Budgets ─────────────────────────────── */}
+      <section className="space-y-3">
+        <p className="text-xs font-mono uppercase tracking-widest text-zinc-600">Agent Budgets · This Month</p>
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ backgroundColor: "#111118", border: "1px solid #1a1a2e" }}
+        >
+          {loadingBudgets ? (
+            <div className="p-8 text-center text-xs text-zinc-600">Loading...</div>
+          ) : (
+            <div className="divide-y divide-zinc-800/40">
+              {budgets.map((agent) => {
+                const pct = agent.budgetUsd > 0
+                  ? Math.min(100, Math.round((agent.spentUsd / agent.budgetUsd) * 100))
+                  : 0
+                const barColor = budgetColor(pct)
+                return (
+                  <div key={agent.name} className="px-6 py-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{agent.emoji}</span>
+                        <span className="text-sm font-semibold text-white">{agent.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-mono font-bold" style={{ color: barColor }}>
+                          ${agent.spentUsd.toFixed(2)}
+                        </span>
+                        <span className="text-xs text-zinc-600 ml-1">/ ${agent.budgetUsd}</span>
+                        <span
+                          className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                          style={{ backgroundColor: `${barColor}20`, color: barColor }}
+                        >
+                          {pct}%
+                        </span>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div
+                      className="w-full h-1.5 rounded-full overflow-hidden"
+                      style={{ backgroundColor: "#1a1a2e" }}
+                    >
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, backgroundColor: barColor }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-[10px] text-zinc-600">
+                        {agent.tokens.toLocaleString()} tokens
+                      </p>
+                      <p className="text-[10px] text-zinc-600">of ${agent.budgetUsd}/mo budget</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Section 4: Goals ─────────────────────────────────────── */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-mono uppercase tracking-widest text-zinc-600">Goals</p>
+          <button
+            onClick={() => setShowAddGoal(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+            style={{
+              backgroundColor: "rgba(124,58,237,0.15)",
+              border: "1px solid rgba(124,58,237,0.3)",
+              color: "#a78bfa",
+            }}
+          >
+            + Add Goal
+          </button>
+        </div>
+
+        {showAddGoal && (
+          <AddGoalForm
+            onAdd={handleGoalAdded}
+            onCancel={() => setShowAddGoal(false)}
+          />
+        )}
+
+        {loadingGoals ? (
+          <div
+            className="rounded-2xl p-8 text-center text-xs text-zinc-600"
+            style={{ backgroundColor: "#111118", border: "1px solid #1a1a2e" }}
+          >
+            Loading...
+          </div>
+        ) : goals.length === 0 ? (
+          <div
+            className="rounded-2xl p-8 text-center text-xs text-zinc-600"
+            style={{ backgroundColor: "#111118", border: "1px solid #1a1a2e" }}
+          >
+            No goals yet. Add one above.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {goals.map((goal) => {
+              const statusStyle = STATUS_STYLE[goal.status]
+              const priorityColor = PRIORITY_COLOR[goal.priority]
+              const agentEmoji = goal.assignedTo ? (AGENT_EMOJI[goal.assignedTo] ?? "") : ""
+
+              return (
+                <div
+                  key={goal.id}
+                  className="rounded-xl p-4 flex items-start gap-4 transition-all hover:bg-white/[0.02]"
+                  style={{ backgroundColor: "#111118", border: "1px solid #1a1a2e" }}
+                >
+                  {/* Priority dot */}
+                  <div className="flex flex-col items-center gap-1 pt-0.5">
+                    <div
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: priorityColor }}
+                      title={`${goal.priority} priority`}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold text-white leading-snug">{goal.title}</p>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {agentEmoji && (
+                          <span className="text-base" title={goal.assignedTo}>{agentEmoji}</span>
+                        )}
+                        <button
+                          onClick={() => cycleGoalStatus(goal)}
+                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full cursor-pointer transition-opacity hover:opacity-70"
+                          style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}
+                          title="Click to cycle status"
+                        >
+                          {statusStyle.label}
+                        </button>
+                      </div>
+                    </div>
+                    {goal.description && (
+                      <p className="text-[11px] text-zinc-500 leading-snug">{goal.description}</p>
+                    )}
+                    <div className="flex items-center gap-3 pt-0.5">
+                      <span
+                        className="text-[10px] font-medium"
+                        style={{ color: priorityColor }}
+                      >
+                        {goal.priority}
+                      </span>
+                      {goal.assignedTo && (
+                        <span className="text-[10px] text-zinc-600">{goal.assignedTo}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* Back link */}
+      <div className="pt-2">
+        <Link href="/dashboard" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+          ← Dashboard
+        </Link>
+      </div>
+    </div>
+  )
+}

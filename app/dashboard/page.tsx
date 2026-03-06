@@ -39,6 +39,15 @@ interface IntelReport {
   headline?: string
 }
 
+interface Goal {
+  id: string
+  title: string
+  description?: string
+  status: "active" | "completed" | "paused"
+  priority: "high" | "medium" | "low"
+  assignedTo?: string
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const PINNED = ["shipyard", "mission-control", "superteam-miami", "arken"]
@@ -101,13 +110,15 @@ export default function DashboardPage() {
   const [repos, setRepos] = useState<Repo[]>([])
   const [intel, setIntel] = useState<IntelReport | null>(null)
   const [loading, setLoading] = useState(true)
+  const [goals, setGoals] = useState<Goal[]>([])
 
   const fetchAll = useCallback(async () => {
-    const [sessRes, taskRes, projRes, intelRes] = await Promise.allSettled([
+    const [sessRes, taskRes, projRes, intelRes, goalsRes] = await Promise.allSettled([
       fetch("/api/sessions", { cache: "no-store" }).then((r) => r.json()),
       fetch("/api/tasks", { cache: "no-store" }).then((r) => r.json()),
       fetch("/api/projects", { cache: "no-store" }).then((r) => r.json()),
       fetch("/api/intel/report", { cache: "no-store" }).then((r) => r.json()),
+      fetch("/api/company/goals", { cache: "no-store" }).then((r) => r.json()),
     ])
 
     if (sessRes.status === "fulfilled") {
@@ -124,6 +135,10 @@ export default function DashboardPage() {
     }
     if (intelRes.status === "fulfilled") {
       setIntel(intelRes.value as IntelReport)
+    }
+    if (goalsRes.status === "fulfilled") {
+      const g = goalsRes.value as Goal[]
+      setGoals(Array.isArray(g) ? g : [])
     }
     setLoading(false)
   }, [])
@@ -432,6 +447,50 @@ export default function DashboardPage() {
           </div>
         </section>
       </div>
+
+      {/* ── Goals Widget ──────────────────────────────────────── */}
+      <section className="space-y-3">
+        <p className="text-xs font-mono uppercase tracking-widest text-zinc-600">Goals</p>
+        <div
+          className="rounded-xl p-5 space-y-3"
+          style={{ backgroundColor: "#111118", border: "1px solid rgba(124,58,237,0.25)", boxShadow: "0 0 24px rgba(124,58,237,0.04)" }}
+        >
+          {(() => {
+            const AGENT_EMOJI: Record<string, string> = {
+              vic: "🦞", scout: "🔭", builder: "⚡", "deal-flow": "🤝", baron: "🏦",
+            }
+            const PRIORITY_COLOR: Record<string, string> = {
+              high: "#ef4444", medium: "#f59e0b", low: "#22c55e",
+            }
+            const activeGoals = goals.filter((g) => g.status === "active").slice(0, 3)
+            if (loading) return <p className="text-xs text-zinc-600 text-center py-2">Loading...</p>
+            if (activeGoals.length === 0) return (
+              <p className="text-xs text-zinc-600 text-center py-2">No active goals. <Link href="/company" className="hover:text-zinc-400" style={{ color: "#7c3aed" }}>Set one →</Link></p>
+            )
+            return (
+              <div className="space-y-2">
+                {activeGoals.map((goal) => (
+                  <div key={goal.id} className="flex items-center gap-3">
+                    <div
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: PRIORITY_COLOR[goal.priority] ?? "#71717a" }}
+                    />
+                    <p className="text-xs text-zinc-300 flex-1 leading-snug truncate">{goal.title}</p>
+                    {goal.assignedTo && (
+                      <span className="text-sm shrink-0">{AGENT_EMOJI[goal.assignedTo] ?? ""}</span>
+                    )}
+                  </div>
+                ))}
+                <div className="pt-1">
+                  <Link href="/company" className="text-xs font-medium transition-colors hover:text-white" style={{ color: "#7c3aed" }}>
+                    View all goals →
+                  </Link>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      </section>
 
       {/* ── What the Team is Working On ──────────────────────────── */}
       <section className="space-y-3">

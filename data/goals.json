@@ -1,0 +1,26 @@
+[
+  {
+    "id": "goal-1",
+    "title": "Ship Shipyard to 100 API listings",
+    "status": "active",
+    "priority": "high",
+    "assignedTo": "builder",
+    "description": "Grow the marketplace to critical mass"
+  },
+  {
+    "id": "goal-2",
+    "title": "Establish MoonPay Agents as default agent payment rail",
+    "status": "active",
+    "priority": "high",
+    "assignedTo": "deal-flow",
+    "description": "Win the agent payment infrastructure race"
+  },
+  {
+    "id": "goal-3",
+    "title": "Scout coverage across x402, OpenClaw, DeFi agent land daily",
+    "status": "active",
+    "priority": "medium",
+    "assignedTo": "scout",
+    "description": "Stay ahead of the frontier"
+  }
+]

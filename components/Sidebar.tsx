@@ -15,12 +15,14 @@ import {
   Settings,
   TrendingUp,
   MessageSquare,
+  Building2,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/chat", label: "CEO Chat", icon: MessageSquare },
   { href: "/agents", label: "Agents", icon: Users },
+  { href: "/company", label: "Company", icon: Building2 },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/projects", label: "Projects", icon: Folder },
   { href: "/intel", label: "Intel", icon: Zap },
@@ -32,11 +34,11 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
-// Bottom nav items (most important 5 for mobile): Dashboard, Tasks, Projects, Intel, Costs
+// Bottom nav: Dashboard, Tasks, Company, Intel, Costs
 const mobileNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/projects", label: "Projects", icon: Folder },
+  { href: "/company", label: "Company", icon: Building2 },
   { href: "/intel", label: "Intel", icon: Zap },
   { href: "/costs", label: "Costs", icon: TrendingUp },
 ];
