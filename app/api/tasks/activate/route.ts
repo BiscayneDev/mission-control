@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const agentName = agentMap[assignee] || "unassigned"
 
     const message = [
-      `🎯 [TASK ACTIVATED — ACTION REQUIRED]`,
+      `🎯 [TASK ACTIVATED]`,
       ``,
       `Title: ${title}`,
       description ? `Notes: ${description}` : `Notes: (none)`,
@@ -44,13 +44,13 @@ export async function POST(request: Request) {
       `Do not ask for clarification — act now.`,
     ].filter(Boolean).join("\n")
 
+    // Fire as an agent turn directly into Vic's session (not just a notification)
     execFileAsync(OPENCLAW, [
-      "message", "send",
-      "--channel", "telegram",
-      "--target", "264452755",
+      "agent",
+      "--to", "264452755",
       "--message", message,
     ], {
-      timeout: 15000,
+      timeout: 30000,
       env: { ...process.env, PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
     }).catch(() => null)
 

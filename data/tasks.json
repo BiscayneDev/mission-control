@@ -190,7 +190,7 @@
     "id": "task-1772776754478",
     "title": "Goal → Task linking — connect goals to tasks",
     "description": "Add goal selector when creating/editing tasks. Dashboard shows goal progress based on task completion. Goals page shows linked tasks.",
-    "column": "backlog",
+    "column": "in-progress",
     "priority": "medium",
     "assignee": "builder",
     "tags": [
@@ -198,7 +198,7 @@
       "goals"
     ],
     "createdAt": "2026-03-06T05:59:14.478Z",
-    "updatedAt": "2026-03-06T05:59:14.478Z"
+    "updatedAt": "2026-03-06T16:54:51.522Z"
   },
   {
     "id": "task-1772776985364",

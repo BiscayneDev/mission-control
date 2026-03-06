@@ -1,5 +1,13 @@
 [
   {
+    "id": "ed52e9c3-f8ba-4c29-8a0e-9dd64aebb63d",
+    "taskId": "task-1772776754478",
+    "taskTitle": "Goal → Task linking — connect goals to tasks",
+    "agent": "builder",
+    "action": "started",
+    "timestamp": "2026-03-06T16:54:51.525Z"
+  },
+  {
     "id": "50bbff8f-56a3-4a39-9ac9-6e2b9f4002de",
     "taskId": "task-1772776754363",
     "taskTitle": "Set up Deal Flow agent — identity + partnership monitoring cron",
