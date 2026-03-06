@@ -14,20 +14,6 @@
     "updatedAt": "2026-02-24T12:00:00Z"
   },
   {
-    "id": "task-5",
-    "title": "Deploy Mission Control v2 dashboard",
-    "description": "Ship the updated mission control dashboard with new pages and improved agent views.",
-    "column": "in-progress",
-    "priority": "high",
-    "assignee": "builder",
-    "tags": [
-      "Dashboard",
-      "Deployment"
-    ],
-    "createdAt": "2026-02-26T14:00:00Z",
-    "updatedAt": "2026-02-28T09:00:00Z"
-  },
-  {
     "id": "task-6",
     "title": "Scan Agent Land trending projects",
     "description": "Weekly scan of trending AI agent projects and frameworks across the ecosystem.",
@@ -44,8 +30,8 @@
   {
     "id": "task-8",
     "title": "Set up Wallet agent",
-    "description": "Build out the Wallet agent — on-chain ops, MoonPay CLI, x402 payments, Solana monitoring. Research best crypto agent tooling first.",
-    "column": "backlog",
+    "description": "Build out the Wallet agent — on-chain ops, MoonPay CLI, x402 payments, Solana monitoring. Research best crypto agent tooling after.",
+    "column": "in-progress",
     "priority": "medium",
     "assignee": "vic",
     "tags": [
@@ -55,6 +41,17 @@
       "Solana"
     ],
     "createdAt": "2026-02-28T17:00:00Z",
-    "updatedAt": "2026-02-28T17:00:00Z"
+    "updatedAt": "2026-03-06T04:46:42.048Z"
+  },
+  {
+    "id": "task-1772772441751",
+    "title": "Add notifications for when an agent starts and finishes work",
+    "description": "",
+    "column": "in-progress",
+    "priority": "medium",
+    "assignee": "builder",
+    "tags": [],
+    "createdAt": "2026-03-06T04:47:21.751Z",
+    "updatedAt": "2026-03-06T04:47:26.851Z"
   }
 ]

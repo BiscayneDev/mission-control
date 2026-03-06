@@ -24,34 +24,27 @@ export async function POST(request: Request) {
     const agentName = agentMap[assignee] || "whoever is best suited"
 
     const message = [
-      `🎯 New task activated from Mission Control:`,
+      `🎯 Task activated from Mission Control:`,
       ``,
-      `**Task:** ${title}`,
-      description ? `**Description:** ${description}` : null,
-      `**Priority:** ${priority || "medium"}`,
-      `**Assigned to:** ${agentName}`,
-      `**Task ID:** ${taskId}`,
+      `Task: ${title}`,
+      description ? `Description: ${description}` : null,
+      `Priority: ${priority || "medium"}`,
+      `Assigned to: ${agentName}`,
+      `Task ID: ${taskId}`,
       ``,
-      `Please action this task now. Delegate to ${agentName} if appropriate, or handle it yourself. Update the task board when done.`,
+      `Please action this now. Delegate to ${agentName} if appropriate.`,
     ].filter(Boolean).join("\n")
 
-    // Fire-and-forget — sends to Vic's main session
+    // Send to our Telegram chat — Vic picks it up and acts on it
     execFileAsync(OPENCLAW, [
-      "agent",
+      "message", "send",
+      "--channel", "telegram",
+      "--target", "264452755",
       "--message", message,
-      "--deliver",
     ], {
-      timeout: 30000,
+      timeout: 15000,
       env: { ...process.env, PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
-    }).catch(() => {
-      execFileAsync(OPENCLAW, [
-        "agent",
-        "--message", message,
-      ], {
-        timeout: 30000,
-        env: { ...process.env, PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin" }
-      }).catch(() => null)
-    })
+    }).catch(() => null)
 
     return NextResponse.json({ ok: true })
   } catch {
