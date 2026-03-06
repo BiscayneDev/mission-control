@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation"
 // ── Agent definitions ──────────────────────────────────────────────────────
 
 const AGENTS = [
-  { emoji: "🦞", name: "Vic", role: "Chief of Staff", color: "#7c3aed" },
-  { emoji: "🔭", name: "Scout", role: "Market Intelligence", color: "#06b6d4" },
-  { emoji: "⚡", name: "Builder", role: "Engineering", color: "#10b981" },
-  { emoji: "🤝", name: "Deal Flow", role: "Partnerships", color: "#f59e0b" },
-  { emoji: "🏦", name: "Baron", role: "Treasury", color: "#ec4899" },
+  { emoji: "🤖", name: "Chief of Staff", role: "Orchestrates your agent team", color: "#7c3aed" },
+  { emoji: "🔭", name: "Researcher", role: "Market intelligence & signals", color: "#06b6d4" },
+  { emoji: "⚡", name: "Engineer", role: "Builds and ships code", color: "#10b981" },
+  { emoji: "🤝", name: "Deal Flow", role: "Partnerships & opportunities", color: "#f59e0b" },
+  { emoji: "🏦", name: "Treasurer", role: "Wallet & financial ops", color: "#ec4899" },
 ]
 
 // ── Types ─────────────────────────────────────────────────────────────────
@@ -363,8 +363,8 @@ function SailboatScene() {
         fontFamily: "var(--font-geist-mono), monospace", display: "flex", flexDirection: "column", gap: 6,
       }}>
         {[
-          { label: "agents online", value: "5" },
-          { label: "tasks activated", value: "∞" },
+          { label: "agents online", value: "∞" },
+          { label: "tasks automated", value: "∞" },
           { label: "balls dropped", value: "0" },
         ].map(({ label, value }) => (
           <div key={label} style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between" }}>
@@ -439,9 +439,9 @@ function SailboatScene() {
                   margin: "0 auto 40px",
                 }}
               >
-                Your AI-powered command center.
+                Your AI command center.
                 <br />
-                One dashboard. Five agents. Zero dropped balls.
+                Bring your own agents. Run your company on autopilot.
               </p>
               <button
                 onClick={next}
@@ -463,8 +463,11 @@ function SailboatScene() {
                 Meet your team →
               </button>
 
-              {/* Agent cards */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {/* Role cards — generic, not my specific agents */}
+              <p style={{ fontSize: 12, color: "#52525b", marginBottom: 12, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                Common agent roles
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {AGENTS.map((agent, i) => (
                   <div
                     key={agent.name}
@@ -475,23 +478,27 @@ function SailboatScene() {
                       display: "flex",
                       alignItems: "center",
                       gap: 12,
-                      backgroundColor: "#111118",
-                      border: `1px solid ${agent.color}44`,
+                      backgroundColor: "rgba(255,255,255,0.03)",
+                      border: `1px solid rgba(255,255,255,0.06)`,
+                      borderLeft: `2px solid ${agent.color}66`,
                       borderRadius: 10,
                       padding: "10px 16px",
                       textAlign: "left",
                     }}
                   >
-                    <span style={{ fontSize: 22 }}>{agent.emoji}</span>
+                    <span style={{ fontSize: 20 }}>{agent.emoji}</span>
                     <div>
-                      <span style={{ fontWeight: 600, color: agent.color }}>{agent.name}</span>
-                      <span style={{ color: "#71717a", marginLeft: 8, fontSize: 14 }}>
-                        — {agent.role}
+                      <span style={{ fontWeight: 600, color: "#e4e4e7", fontSize: 14 }}>{agent.name}</span>
+                      <span style={{ color: "#52525b", marginLeft: 8, fontSize: 13 }}>
+                        {agent.role}
                       </span>
                     </div>
                   </div>
                 ))}
               </div>
+              <p style={{ fontSize: 12, color: "#3f3f46", marginTop: 12, textAlign: "center" }}>
+                You define the agents — Shipyard OS runs them.
+              </p>
             </div>
           )}
 
