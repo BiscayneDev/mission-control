@@ -28,22 +28,6 @@
     "updatedAt": "2026-02-28T08:00:00Z"
   },
   {
-    "id": "task-8",
-    "title": "Set up Wallet agent",
-    "description": "Build out the Wallet agent — on-chain ops, MoonPay CLI, x402 payments, Solana monitoring. Research best crypto agent tooling after. Baron is going to be knowledgeable about this. ",
-    "column": "in-progress",
-    "priority": "medium",
-    "assignee": "vic",
-    "tags": [
-      "Agents",
-      "Wallet",
-      "x402",
-      "Solana"
-    ],
-    "createdAt": "2026-02-28T17:00:00Z",
-    "updatedAt": "2026-03-06T05:01:25.513Z"
-  },
-  {
     "id": "task-1772772968353",
     "title": "Add notifications for when an agent starts and finishes work",
     "description": "",
@@ -53,5 +37,27 @@
     "tags": [],
     "createdAt": "2026-03-06T04:56:08.353Z",
     "updatedAt": "2026-03-06T05:00:39.417Z"
+  },
+  {
+    "id": "task-1772773567056",
+    "title": "Set up the MoonPay CLI and wallet for Baron",
+    "description": "✅ Done:\n- BARON.md identity file created at ~/clawd/agents/baron/BARON.md\n- MoonPay CLI wallet created: Solana 4nEcdo9BPGrKK59AqEGdBff3SDjfTAcSNkcvBkBpn6WU, EVM 0x6715d4DA636b50E579f69fa92D620955Bd1A2e07\n- Scout deployed to research best Solana DeFi + crypto agent tooling (results incoming)\n- MEMORY.md updated with Baron wallet addresses",
+    "column": "in-review",
+    "priority": "medium",
+    "assignee": "baron",
+    "tags": [],
+    "createdAt": "2026-03-06T05:06:07.056Z",
+    "updatedAt": "2026-03-06T05:14:09.282Z"
+  },
+  {
+    "id": "task-1772774246157",
+    "title": "Add activity feed so we can see all that gets shipped /done and by what agent. ",
+    "description": "",
+    "column": "in-progress",
+    "priority": "medium",
+    "assignee": "unassigned",
+    "tags": [],
+    "createdAt": "2026-03-06T05:17:26.157Z",
+    "updatedAt": "2026-03-06T05:19:37.609Z"
   }
 ]
