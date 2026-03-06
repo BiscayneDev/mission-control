@@ -31,7 +31,7 @@
     "id": "task-8",
     "title": "Set up Wallet agent",
     "description": "Build out the Wallet agent — on-chain ops, MoonPay CLI, x402 payments, Solana monitoring. Research best crypto agent tooling after.",
-    "column": "in-progress",
+    "column": "backlog",
     "priority": "medium",
     "assignee": "vic",
     "tags": [
@@ -41,17 +41,17 @@
       "Solana"
     ],
     "createdAt": "2026-02-28T17:00:00Z",
-    "updatedAt": "2026-03-06T04:46:42.048Z"
+    "updatedAt": "2026-03-06T04:53:09.756Z"
   },
   {
-    "id": "task-1772772441751",
+    "id": "task-1772772968353",
     "title": "Add notifications for when an agent starts and finishes work",
     "description": "",
     "column": "in-progress",
     "priority": "medium",
     "assignee": "builder",
     "tags": [],
-    "createdAt": "2026-03-06T04:47:21.751Z",
-    "updatedAt": "2026-03-06T04:47:26.851Z"
+    "createdAt": "2026-03-06T04:56:08.353Z",
+    "updatedAt": "2026-03-06T04:56:11.175Z"
   }
 ]
