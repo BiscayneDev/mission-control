@@ -25,6 +25,7 @@ interface UsageResponse {
 interface CostResult {
   currency: string
   amount: string
+  cost_type?: string
 }
 
 interface CostBucket {
@@ -111,7 +112,7 @@ async function fetchAllCosts(): Promise<CostBucket[]> {
   let pageToken: string | null = null
 
   do {
-    const params = new URLSearchParams({ starting_at, ending_at, bucket_width: "1d" })
+    const params = new URLSearchParams({ starting_at, ending_at, bucket_width: "1d", "group_by[]": "description" })
     if (pageToken) params.set("page", pageToken)
     const res = await fetch(`https://api.anthropic.com/v1/organizations/cost_report?${params}`, { headers: apiHeaders() })
     if (!res.ok) throw new Error(`Cost API ${res.status}: ${await res.text()}`)
@@ -162,7 +163,9 @@ export async function GET() {
     const dailyMap = new Map<string, number>()
     for (const bucket of costBuckets) {
       const date = bucket.starting_at.slice(0, 10)
-      const dayTotal = bucket.results.reduce((s, r) => s + parseFloat(r.amount), 0)
+      const dayTotal = bucket.results
+        .filter(r => !r.cost_type || r.cost_type === "tokens")
+        .reduce((s, r) => s + parseFloat(r.amount), 0)
       dailyMap.set(date, (dailyMap.get(date) ?? 0) + dayTotal)
     }
     const dailyCosts: DailyCost[] = Array.from(dailyMap.entries())

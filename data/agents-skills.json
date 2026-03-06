@@ -1,0 +1,7 @@
+{
+  "vic": ["gog", "github", "gh-issues", "weather", "summarize", "healthcheck", "clawhub", "xurl", "coding-agent", "last30days", "ontology", "scrapling", "auto-updater", "model-usage", "peekaboo", "imsg", "skill-creator"],
+  "scout": ["last30days", "xurl", "summarize", "scrapling"],
+  "builder": ["coding-agent", "github", "gh-issues"],
+  "baron": ["mooniq-check-wallet", "mooniq-buy-crypto", "mooniq-sell-crypto", "mooniq-swap-tokens"],
+  "deal-flow": ["last30days", "xurl", "summarize", "gog"]
+}
