@@ -268,22 +268,111 @@ export default function SetupPage() {
   const canGoNextWorkspace = scanResult !== null || workspaceSkipped
   const canGoNextIdentity = state.userName.trim().length > 0
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Sailboat ─────────────────────────────────────────────────────────────
+
+const SAIL_LINES = [
+  { text: "       │╲", color: "#71717a" },
+  { text: "      ╱│ ╲", color: "#a1a1aa" },
+  { text: "     ╱ │  ╲", color: "rgba(103,232,249,0.6)" },
+  { text: "    ╱  │   ╲", color: "rgba(34,211,238,0.7)" },
+  { text: "   ╱   │    ╲", color: "rgba(34,211,238,0.9)" },
+  { text: "  ▁▁▁▁▁▁▁▁▁▁▁▁", color: "#2dd4bf" },
+  { text: "   ╲▁▁▁▁▁▁▁▁╱", color: "#14b8a6" },
+]
+
+const WAVE = "~≈∿~≈∿~≈∿~≈∿~≈∿~≈∿~≈∿~≈∿~≈∿~≈∿~≈∿~"
+const WAVE_LAYERS = [
+  { speed: 3, opacity: 0.5, color: "rgb(34 211 238)", delay: 0 },
+  { speed: 4, opacity: 0.35, color: "rgb(45 212 191)", delay: 0.4 },
+  { speed: 5, opacity: 0.2, color: "rgb(20 184 166)", delay: 0.8 },
+]
+
+function SailboatScene() {
+  return (
+    <div style={{
+      position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", userSelect: "none", pointerEvents: "none",
+    }}>
+      {/* Ambient glow */}
+      <div style={{
+        position: "absolute", width: 400, height: 400, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(34,211,238,0.08) 0%, transparent 70%)",
+        animation: "pulse-glow 4s ease-in-out infinite",
+      }} />
+
+      {/* Grid lines */}
+      <div style={{
+        position: "absolute", inset: 0, opacity: 0.04,
+        backgroundImage: "linear-gradient(rgba(34,211,238,1) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,1) 1px, transparent 1px)",
+        backgroundSize: "40px 40px",
+      }} />
+
+      {/* Tagline */}
+      <div style={{
+        position: "absolute", top: "12%", textAlign: "center",
+        fontFamily: "var(--font-geist-mono), monospace",
+      }}>
+        <p style={{ color: "rgba(34,211,238,0.3)", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase" }}>
+          // launch your api into the agent economy
+        </p>
+      </div>
+
+      {/* Sailboat */}
+      <div style={{ animation: "boat-rock 4s ease-in-out infinite", transformOrigin: "bottom center", marginBottom: 8 }}>
+        <pre style={{ fontFamily: "var(--font-geist-mono), monospace", fontSize: 18, lineHeight: 1.15, margin: 0 }}>
+          {SAIL_LINES.map((line, i) => (
+            <span key={i} style={{ color: line.color, display: "block" }}>{line.text}</span>
+          ))}
+        </pre>
+      </div>
+
+      {/* Waves */}
+      <div style={{ position: "relative", height: 32, width: 280, overflow: "hidden" }}>
+        {WAVE_LAYERS.map((layer, i) => (
+          <div key={i} style={{
+            position: "absolute", left: "50%", transform: "translateX(-50%)",
+            whiteSpace: "nowrap", fontFamily: "var(--font-geist-mono), monospace",
+            fontSize: 14, top: i * 10, opacity: layer.opacity, color: layer.color,
+            animation: `wave-drift ${layer.speed}s ease-in-out infinite`,
+            animationDelay: `${layer.delay}s`,
+          }}>{WAVE}</div>
+        ))}
+      </div>
+
+      {/* Bottom label */}
+      <div style={{
+        position: "absolute", bottom: "10%", textAlign: "center",
+        fontFamily: "var(--font-geist-mono), monospace",
+      }}>
+        <p style={{ color: "rgba(34,211,238,0.2)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+          shipyard os · agent runtime
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#0a0a0f",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem 1rem",
-        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
-        color: "#e4e4e7",
-      }}
-    >
+    <div style={{
+      minHeight: "100vh", backgroundColor: "#0a0a0f", display: "flex",
+      fontFamily: "var(--font-geist-sans), system-ui, sans-serif", color: "#e4e4e7",
+    }}>
+      {/* ── Right panel: sailboat scene (hidden on mobile) ──────────── */}
+      <div className="hidden lg:block" style={{
+        flex: 1, position: "relative", overflow: "hidden",
+        borderRight: "1px solid rgba(34,211,238,0.08)",
+      }}>
+        <SailboatScene />
+      </div>
+
+      {/* ── Left panel: wizard ─────────────────────────────────────── */}
+      <div style={{
+        width: "100%", maxWidth: 520, display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", padding: "2rem 1rem",
+        flexShrink: 0,
+      }}>
       <div style={{ width: "100%", maxWidth: 520 }}>
         {/* Progress dots — hidden on welcome and done */}
         {step > 0 && step < 5 && <ProgressDots step={step} total={6} />}
@@ -821,6 +910,7 @@ export default function SetupPage() {
             </div>
           )}
         </StepWrapper>
+      </div>
       </div>
     </div>
   )
