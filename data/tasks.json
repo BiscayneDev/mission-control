@@ -239,5 +239,87 @@
     ],
     "createdAt": "2026-03-06T18:47:24.312Z",
     "updatedAt": "2026-03-06T18:47:24.312Z"
+  },
+  {
+    "id": "task-1772831201062",
+    "title": "Diagnose cost tracker discrepancy",
+    "description": "Investigated why mission control costs page was showing $0.55 vs $100+ actual Anthropic bill. Root cause: reading wrong session file, missing sub-agents.",
+    "column": "done",
+    "priority": "high",
+    "assignee": "vic",
+    "tags": [
+      "costs",
+      "debug"
+    ],
+    "createdAt": "2026-03-06T21:06:41.062Z",
+    "updatedAt": "2026-03-06T21:06:41.062Z"
+  },
+  {
+    "id": "task-1772831201329",
+    "title": "Rebuild costs page with Anthropic Admin API",
+    "description": "Replaced local session file parsing with real Anthropic Admin API. Daily spend chart, real costs, cache stats, API Keys step in setup wizard.",
+    "column": "done",
+    "priority": "high",
+    "assignee": "builder",
+    "tags": [
+      "costs",
+      "feature"
+    ],
+    "createdAt": "2026-03-06T21:06:41.329Z",
+    "updatedAt": "2026-03-06T21:06:41.329Z"
+  },
+  {
+    "id": "task-1772831201508",
+    "title": "Fix pagination bug in costs API",
+    "description": "Corrected response schema mismatch (nested results[], page= param, uncached_input_tokens field names).",
+    "column": "done",
+    "priority": "medium",
+    "assignee": "vic",
+    "tags": [
+      "costs",
+      "bugfix"
+    ],
+    "createdAt": "2026-03-06T21:06:41.508Z",
+    "updatedAt": "2026-03-06T21:06:41.508Z"
+  },
+  {
+    "id": "task-1772831201630",
+    "title": "Security audit + OpenClaw update",
+    "description": "Ran full security audit. Firewall was off (flagged), updated OpenClaw to 2026.3.2. No secrets in git.",
+    "column": "done",
+    "priority": "medium",
+    "assignee": "vic",
+    "tags": [
+      "security"
+    ],
+    "createdAt": "2026-03-06T21:06:41.630Z",
+    "updatedAt": "2026-03-06T21:06:41.630Z"
+  },
+  {
+    "id": "task-1772831201788",
+    "title": "Update README for localhost-first model",
+    "description": "Rewrote README to reflect setup wizard, remove Vercel deploy instructions, correct feature list.",
+    "column": "done",
+    "priority": "low",
+    "assignee": "vic",
+    "tags": [
+      "docs"
+    ],
+    "createdAt": "2026-03-06T21:06:41.788Z",
+    "updatedAt": "2026-03-06T21:06:41.788Z"
+  },
+  {
+    "id": "task-1772831201933",
+    "title": "Token usage dashboard with heatmap",
+    "description": "Building deep usage analytics: hourly heatmap, stacked daily bars, cache efficiency meters, model breakdown with costs.",
+    "column": "in-progress",
+    "priority": "high",
+    "assignee": "builder",
+    "tags": [
+      "usage",
+      "feature"
+    ],
+    "createdAt": "2026-03-06T21:06:41.933Z",
+    "updatedAt": "2026-03-06T21:06:41.933Z"
   }
 ]

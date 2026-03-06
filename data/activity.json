@@ -1,5 +1,53 @@
 [
   {
+    "id": "6c75913b-ac5a-4ced-90b6-999cbe7be428",
+    "taskId": "task-1772831201933",
+    "taskTitle": "Token usage dashboard with heatmap",
+    "agent": "builder",
+    "action": "started",
+    "timestamp": "2026-03-06T21:06:42.043Z"
+  },
+  {
+    "id": "65f172a7-e0e3-41f7-9584-015524f56b03",
+    "taskId": "task-1772831201788",
+    "taskTitle": "Update README for localhost-first model",
+    "agent": "vic",
+    "action": "completed",
+    "timestamp": "2026-03-06T21:06:41.903Z"
+  },
+  {
+    "id": "8cbd269e-0006-42c6-9efc-0aaa8620fd5d",
+    "taskId": "task-1772831201630",
+    "taskTitle": "Security audit + OpenClaw update",
+    "agent": "vic",
+    "action": "completed",
+    "timestamp": "2026-03-06T21:06:41.737Z"
+  },
+  {
+    "id": "0d470dd4-c9ec-4356-9d57-81a97561a8b2",
+    "taskId": "task-1772831201508",
+    "taskTitle": "Fix pagination bug in costs API",
+    "agent": "vic",
+    "action": "completed",
+    "timestamp": "2026-03-06T21:06:41.611Z"
+  },
+  {
+    "id": "f6356e84-39e2-404a-9228-164da0f05173",
+    "taskId": "task-1772831201329",
+    "taskTitle": "Rebuild costs page with Anthropic Admin API",
+    "agent": "builder",
+    "action": "completed",
+    "timestamp": "2026-03-06T21:06:41.439Z"
+  },
+  {
+    "id": "64270354-7880-42b0-9d37-651e09211007",
+    "taskId": "task-1772831201062",
+    "taskTitle": "Diagnose cost tracker discrepancy",
+    "agent": "vic",
+    "action": "completed",
+    "timestamp": "2026-03-06T21:06:41.306Z"
+  },
+  {
     "id": "aa13d59d-6d73-410d-9b23-5b34e153158c",
     "taskId": "task-1772776754478",
     "taskTitle": "Goal → Task linking",

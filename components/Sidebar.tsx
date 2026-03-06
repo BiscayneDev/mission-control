@@ -15,6 +15,7 @@ import {
   TrendingUp,
   MessageSquare,
   Activity,
+  SlidersHorizontal,
 } from "lucide-react";
 
 const navSections = [
@@ -24,6 +25,7 @@ const navSections = [
       { href: "/chat", label: "Chat", icon: MessageSquare },
       { href: "/tasks", label: "Tasks", icon: CheckSquare },
       { href: "/agents", label: "Agents", icon: Users },
+      { href: "/agents/skills", label: "Agent Skills", icon: SlidersHorizontal },
     ],
   },
   {
