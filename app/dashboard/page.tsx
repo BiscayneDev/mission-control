@@ -263,22 +263,27 @@ export default function DashboardPage() {
       <section className="space-y-3">
         <p className="text-xs font-mono uppercase tracking-widest text-zinc-600">Agents</p>
         <div
-          className="rounded-xl p-4"
+          className="rounded-xl p-1"
           style={{ backgroundColor: "#111118", border: "1px solid #1a1a2e" }}
         >
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5">
             {AGENT_DEFS.map((agent) => {
-              const active = !loading && isSessionActive(sessions, agent.keys)
+              const agentKey = agent.name.toLowerCase().replace(" ", "-")
+              const activeTasks = tasks.filter(
+                (t) => t.assignee === agentKey && t.column === "in-progress"
+              )
+              const busy = activeTasks.length > 0
+              const currentTask = activeTasks[0]
               return (
                 <Link
                   key={agent.name}
-                  href="/agents"
-                  className="flex flex-col items-center gap-2 py-3 px-2 rounded-lg transition-all hover:bg-white/5"
+                  href={busy && currentTask ? `/tasks` : "/agents"}
+                  className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg transition-all hover:bg-white/5"
                 >
                   <div className="relative">
                     <span className="text-2xl">{agent.emoji}</span>
-                    {active && (
-                      <span className="absolute -top-0.5 -right-0.5 relative flex h-2 w-2">
+                    {busy && (
+                      <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
                         <span
                           className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
                           style={{ backgroundColor: agent.accent }}
@@ -290,14 +295,21 @@ export default function DashboardPage() {
                       </span>
                     )}
                   </div>
-                  <div className="text-center space-y-0.5">
+                  <div className="text-center space-y-0.5 w-full px-1">
                     <p className="text-xs font-semibold text-white leading-none">{agent.name}</p>
                     <p
                       className="text-[10px] font-medium"
-                      style={{ color: active ? agent.accent : "#52525b" }}
+                      style={{ color: busy ? agent.accent : "#52525b" }}
                     >
-                      {active ? "Active" : "Idle"}
+                      {busy ? "Busy" : "Idle"}
                     </p>
+                    {busy && currentTask && (
+                      <p className="text-[9px] text-zinc-500 truncate leading-tight mt-0.5 max-w-full">
+                        {currentTask.title.length > 22
+                          ? currentTask.title.slice(0, 22) + "…"
+                          : currentTask.title}
+                      </p>
+                    )}
                   </div>
                 </Link>
               )
