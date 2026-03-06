@@ -1,5 +1,41 @@
 [
   {
+    "id": "8e808d07-9c51-421c-a547-782e0f9e7ecb",
+    "taskId": "task-1772775804559",
+    "taskTitle": "Add agent CRUD — edit, delete, create on agents page",
+    "agent": "vic",
+    "action": "started",
+    "summary": "Delegating to Builder",
+    "timestamp": "2026-03-06T05:43:30.414Z"
+  },
+  {
+    "id": "80101c60-cffc-4943-8193-7060ca5b07e8",
+    "taskId": "task-1772775715851",
+    "taskTitle": "Set up Baron daily treasury report cron",
+    "agent": "baron",
+    "action": "completed",
+    "summary": "Daily 9am ET wallet balance + price report to Telegram",
+    "timestamp": "2026-03-06T05:42:05.684Z"
+  },
+  {
+    "id": "18915ca6-25ad-4769-8250-3c5505d4844b",
+    "taskId": "task-1772775715810",
+    "taskTitle": "Set up Scout Signal Watch cron",
+    "agent": "scout",
+    "action": "completed",
+    "summary": "Daily 1pm ET signal-only cron, pings only on high signal",
+    "timestamp": "2026-03-06T05:42:05.666Z"
+  },
+  {
+    "id": "c50d0a17-0755-4b2c-9d8c-d05842edd7aa",
+    "taskId": "task-1772775715786",
+    "taskTitle": "Fix task ID chain through agent activation",
+    "agent": "vic",
+    "action": "completed",
+    "summary": "Activation endpoint now passes task ID + curl completion commands to agents",
+    "timestamp": "2026-03-06T05:42:05.639Z"
+  },
+  {
     "id": "8b11e703-f496-4680-86f5-efd1d244ed02",
     "taskId": "task-1772774246157",
     "taskTitle": "Add activity feed",

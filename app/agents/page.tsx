@@ -1,50 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-
-const vic = {
-  name: "Vic",
-  emoji: "🦞",
-  role: "Chief of Staff",
-  accent: "#7c3aed",
-  tags: ["Orchestration", "Memory", "Execution"],
-  description: "Coordinates everything. Reads context, keeps memory sharp, makes sure nothing falls through the cracks.",
-}
-
-const agents = [
-  {
-    name: "Scout",
-    emoji: "🔭",
-    role: "Market Intelligence",
-    accent: "#06b6d4",
-    tags: ["x402", "Agent Land", "Crypto Intel"],
-    description: "Monitors X, Reddit, and the web for signal across agent land, DeFi, and crypto.",
-  },
-  {
-    name: "Deal Flow",
-    emoji: "🤝",
-    role: "Partnership Radar",
-    accent: "#f59e0b",
-    tags: ["MoonPay", "Ventures", "Outreach"],
-    description: "Tracks funding rounds, partnerships, and strategic moves relevant to MoonPay.",
-  },
-  {
-    name: "Builder",
-    emoji: "⚡",
-    role: "Full-Stack Dev",
-    accent: "#10b981",
-    tags: ["Next.js", "Solana", "Superteam"],
-    description: "Ships code. Builds and maintains projects, automates workflows.",
-  },
-  {
-    name: "Baron",
-    emoji: "🏦",
-    role: "The Banker",
-    accent: "#ec4899",
-    tags: ["DeFi", "Solana", "Yield"],
-    description: "Protects and compounds on-chain wealth. Monitors positions, manages risk, and finds yield across DeFi.",
-  },
-] as const
+import type { AgentData } from "@/app/api/agents/route"
 
 // Session key → agent display info
 const SESSION_AGENT_MAP: Record<string, { emoji: string; name: string }> = {
@@ -107,11 +64,295 @@ function truncateModel(model: string): string {
 const PURPLE = "#7c3aed"
 const GREEN = "#22c55e"
 
+// ── Agent Modal ───────────────────────────────────────────────────────────────
+
+interface AgentModalProps {
+  agent: AgentData | null  // null = create mode
+  onClose: () => void
+  onSave: (data: Partial<AgentData>) => Promise<void>
+}
+
+function AgentModal({ agent, onClose, onSave }: AgentModalProps) {
+  const isCreate = agent === null
+  const [name, setName] = useState(agent?.name ?? "")
+  const [emoji, setEmoji] = useState(agent?.emoji ?? "🤖")
+  const [role, setRole] = useState(agent?.role ?? "")
+  const [description, setDescription] = useState(agent?.description ?? "")
+  const [accent, setAccent] = useState(agent?.accent ?? "#6366f1")
+  const [tagsInput, setTagsInput] = useState(agent?.tags?.join(", ") ?? "")
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const tags = tagsInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+      await onSave({ name, emoji, role, description, accent, tags })
+      onClose()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
+    >
+      <div
+        className="w-full max-w-md rounded-xl p-6 space-y-4"
+        style={{
+          backgroundColor: "#111118",
+          border: `1px solid ${PURPLE}40`,
+          boxShadow: `0 0 40px ${PURPLE}20`,
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+            {isCreate ? "New Agent" : `Edit ${agent.name}`}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-zinc-500 hover:text-white transition-colors text-lg leading-none"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="flex gap-3">
+            <div className="w-20">
+              <label className="block text-xs text-zinc-500 mb-1">Emoji</label>
+              <input
+                value={emoji}
+                onChange={(e) => setEmoji(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg text-center text-xl"
+                style={{
+                  backgroundColor: "#0a0a0f",
+                  border: "1px solid #27272a",
+                  color: "white",
+                  outline: "none",
+                }}
+                maxLength={4}
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs text-zinc-500 mb-1">Name</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg text-sm"
+                style={{
+                  backgroundColor: "#0a0a0f",
+                  border: "1px solid #27272a",
+                  color: "white",
+                  outline: "none",
+                }}
+                placeholder="Agent name"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">Role</label>
+            <input
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm"
+              style={{
+                backgroundColor: "#0a0a0f",
+                border: "1px solid #27272a",
+                color: "white",
+                outline: "none",
+              }}
+              placeholder="e.g. Market Intelligence"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm resize-none"
+              style={{
+                backgroundColor: "#0a0a0f",
+                border: "1px solid #27272a",
+                color: "white",
+                outline: "none",
+              }}
+              rows={3}
+              placeholder="What does this agent do?"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">Accent Color</label>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-8 h-8 rounded-md border border-zinc-700 shrink-0"
+                style={{ backgroundColor: accent }}
+              />
+              <input
+                value={accent}
+                onChange={(e) => setAccent(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg text-sm font-mono"
+                style={{
+                  backgroundColor: "#0a0a0f",
+                  border: "1px solid #27272a",
+                  color: "white",
+                  outline: "none",
+                }}
+                placeholder="#7c3aed"
+              />
+              <input
+                type="color"
+                value={accent}
+                onChange={(e) => setAccent(e.target.value)}
+                className="w-8 h-8 rounded cursor-pointer border border-zinc-700"
+                style={{ backgroundColor: "transparent", padding: "1px" }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">Tags (comma-separated)</label>
+            <input
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm"
+              style={{
+                backgroundColor: "#0a0a0f",
+                border: "1px solid #27272a",
+                color: "white",
+                outline: "none",
+              }}
+              placeholder="DeFi, Solana, Yield"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+              style={{ backgroundColor: "#1a1a22", border: "1px solid #27272a" }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors"
+              style={{
+                backgroundColor: saving ? `${PURPLE}40` : PURPLE,
+                color: "white",
+                border: `1px solid ${PURPLE}60`,
+              }}
+            >
+              {saving ? "Saving…" : isCreate ? "Create Agent" : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ── Delete confirm dialog ─────────────────────────────────────────────────────
+
+interface DeleteDialogProps {
+  agent: AgentData
+  onClose: () => void
+  onConfirm: () => Promise<void>
+}
+
+function DeleteDialog({ agent, onClose, onConfirm }: DeleteDialogProps) {
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleConfirm() {
+    setDeleting(true)
+    try {
+      await onConfirm()
+      onClose()
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
+    >
+      <div
+        className="w-full max-w-sm rounded-xl p-6 space-y-4"
+        style={{
+          backgroundColor: "#111118",
+          border: "1px solid rgba(239,68,68,0.3)",
+          boxShadow: "0 0 40px rgba(239,68,68,0.1)",
+        }}
+      >
+        <div className="text-center space-y-2">
+          <div className="text-3xl">{agent.emoji}</div>
+          <h2 className="text-sm font-bold text-white">Delete {agent.name}?</h2>
+          <p className="text-xs text-zinc-500">This cannot be undone. The agent will be removed permanently.</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+            style={{ backgroundColor: "#1a1a22", border: "1px solid #27272a" }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={deleting}
+            className="flex-1 py-2 rounded-lg text-xs font-bold text-white transition-colors"
+            style={{
+              backgroundColor: deleting ? "rgba(239,68,68,0.4)" : "rgba(239,68,68,0.8)",
+              border: "1px solid rgba(239,68,68,0.4)",
+            }}
+          >
+            {deleting ? "Deleting…" : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 export default function AgentsPage() {
+  const [agents, setAgents] = useState<AgentData[]>([])
+  const [agentsLoading, setAgentsLoading] = useState(true)
   const [activity, setActivity] = useState<ActivityResponse | null>(null)
   const [activityLoading, setActivityLoading] = useState(true)
   const [sessions, setSessions] = useState<Session[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
+
+  // Modal state: undefined = closed, null = create mode, AgentData = edit mode
+  const [editAgent, setEditAgent] = useState<AgentData | null | undefined>(undefined)
+  const [deleteAgent, setDeleteAgent] = useState<AgentData | null>(null)
+
+  const fetchAgents = useCallback(async () => {
+    try {
+      const res = await fetch("/api/agents", { cache: "no-store" })
+      const data: AgentData[] = await res.json()
+      setAgents(data)
+    } catch {
+      // ignore
+    } finally {
+      setAgentsLoading(false)
+    }
+  }, [])
 
   const fetchActivity = useCallback(async () => {
     try {
@@ -138,6 +379,7 @@ export default function AgentsPage() {
   }, [])
 
   useEffect(() => {
+    fetchAgents()
     fetchActivity()
     fetchSessions()
 
@@ -148,13 +390,48 @@ export default function AgentsPage() {
       clearInterval(activityInterval)
       clearInterval(sessionsInterval)
     }
-  }, [fetchActivity, fetchSessions])
+  }, [fetchAgents, fetchActivity, fetchSessions])
 
+  async function handleSave(data: Partial<AgentData>) {
+    if (editAgent === null) {
+      // Create new agent
+      const res = await fetch("/api/agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      if (res.ok) {
+        const created: AgentData = await res.json()
+        setAgents((prev) => [...prev, created])
+      }
+    } else if (editAgent) {
+      // Optimistic update
+      setAgents((prev) =>
+        prev.map((a) => (a.id === editAgent.id ? { ...a, ...data } : a))
+      )
+      await fetch(`/api/agents/${editAgent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+      await fetchAgents()
+    }
+  }
+
+  async function handleDelete(agent: AgentData) {
+    // Optimistic remove
+    setAgents((prev) => prev.filter((a) => a.id !== agent.id))
+    await fetch(`/api/agents/${agent.id}`, { method: "DELETE" })
+    await fetchAgents()
+  }
+
+  const vicAgent = agents.find((a) => a.isVic)
+  const otherAgents = agents.filter((a) => !a.isVic)
   const displayEvents = activity?.events?.slice(0, 8) ?? []
 
   return (
     <div className="max-w-5xl mx-auto space-y-4 h-full">
-      {/* Mission Banner — compact */}
+      {/* Mission Banner */}
       <div
         className="rounded-lg px-5 py-3"
         style={{
@@ -168,46 +445,64 @@ export default function AgentsPage() {
         </p>
       </div>
 
-      {/* Vic — compact hero row */}
-      <div
-        className="rounded-lg p-4"
-        style={{
-          backgroundColor: "#111118",
-          border: "1px solid rgba(124, 58, 237, 0.35)",
-          boxShadow: "0 0 30px rgba(124, 58, 237, 0.08)",
-        }}
-      >
-        <div className="flex items-center gap-4">
-          <div
-            className="flex items-center justify-center rounded-lg text-2xl shrink-0"
-            style={{ width: "48px", height: "48px", backgroundColor: "rgba(124, 58, 237, 0.15)" }}
-          >
-            🦞
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2">
-              <span className="text-base font-bold text-white">Vic</span>
-              <span className="text-xs" style={{ color: "#7c3aed" }}>Chief of Staff · Orchestrator</span>
+      {/* Vic hero row */}
+      {agentsLoading ? (
+        <div
+          className="rounded-lg p-4 animate-pulse"
+          style={{ backgroundColor: "#111118", border: "1px solid #27272a" }}
+        >
+          <div className="h-12 bg-zinc-800 rounded" />
+        </div>
+      ) : vicAgent ? (
+        <div
+          className="rounded-lg p-4"
+          style={{
+            backgroundColor: "#111118",
+            border: `1px solid ${vicAgent.accent}38`,
+            boxShadow: `0 0 30px ${vicAgent.accent}08`,
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <div
+              className="flex items-center justify-center rounded-lg text-2xl shrink-0"
+              style={{ width: "48px", height: "48px", backgroundColor: `${vicAgent.accent}18` }}
+            >
+              {vicAgent.emoji}
             </div>
-            <p className="text-xs text-zinc-500 mt-0.5 truncate">{vic.description}</p>
-          </div>
-          <div className="hidden sm:flex gap-1.5 shrink-0">
-            {vic.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-0.5 rounded-full text-xs font-medium"
-                style={{
-                  backgroundColor: "rgba(124, 58, 237, 0.12)",
-                  color: "#a78bfa",
-                  border: "1px solid rgba(124, 58, 237, 0.25)",
-                }}
-              >
-                {tag}
-              </span>
-            ))}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2">
+                <span className="text-base font-bold text-white">{vicAgent.name}</span>
+                <span className="text-xs" style={{ color: vicAgent.accent }}>
+                  {vicAgent.role} · Orchestrator
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 mt-0.5 truncate">{vicAgent.description}</p>
+            </div>
+            <div className="hidden sm:flex gap-1.5 shrink-0 flex-wrap">
+              {vicAgent.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor: `${vicAgent.accent}12`,
+                    color: vicAgent.accent,
+                    border: `1px solid ${vicAgent.accent}25`,
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <button
+              onClick={() => setEditAgent(vicAgent)}
+              title="Edit Vic"
+              className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-white/5 transition-colors text-sm"
+            >
+              ✎
+            </button>
           </div>
         </div>
-      </div>
+      ) : null}
 
       {/* Flow arrow */}
       <div className="flex items-center justify-center gap-2 text-xs font-mono text-zinc-700">
@@ -220,51 +515,118 @@ export default function AgentsPage() {
         <span>AGENTS</span>
       </div>
 
-      {/* Agent Grid — 2x2 compact */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {agents.map((agent) => (
-          <div
-            key={agent.name}
-            className="rounded-lg p-4"
-            style={{
-              backgroundColor: "#111118",
-              border: `1px solid ${agent.accent}28`,
-              boxShadow: `0 0 20px ${agent.accent}0a`,
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className="flex items-center justify-center rounded-md text-xl shrink-0"
-                style={{ width: "40px", height: "40px", backgroundColor: `${agent.accent}18` }}
-              >
-                {agent.emoji}
-              </div>
-              <div className="flex-1 min-w-0 space-y-1.5">
-                <div>
-                  <span className="text-sm font-bold text-white">{agent.name}</span>
-                  <span className="text-xs ml-2" style={{ color: agent.accent }}>{agent.role}</span>
-                </div>
-                <p className="text-xs text-zinc-500 leading-relaxed line-clamp-2">{agent.description}</p>
-                <div className="flex flex-wrap gap-1">
-                  {agent.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 rounded-full text-xs"
-                      style={{
-                        backgroundColor: `${agent.accent}12`,
-                        color: agent.accent,
-                        border: `1px solid ${agent.accent}25`,
-                      }}
-                    >
-                      {tag}
-                    </span>
-                  ))}
+      {/* Agent grid header */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-mono uppercase tracking-wider text-zinc-600">
+          Team ({otherAgents.length})
+        </p>
+        <button
+          onClick={() => setEditAgent(null)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+          style={{
+            backgroundColor: `${PURPLE}15`,
+            color: "#a78bfa",
+            border: `1px solid ${PURPLE}30`,
+          }}
+        >
+          <span>+</span>
+          <span>New Agent</span>
+        </button>
+      </div>
+
+      {/* Agent Grid */}
+      {agentsLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="rounded-lg p-4 animate-pulse"
+              style={{ backgroundColor: "#111118", border: "1px solid #27272a" }}
+            >
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-md bg-zinc-800 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-zinc-800 rounded w-1/3" />
+                  <div className="h-3 bg-zinc-800 rounded w-2/3" />
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {otherAgents.map((agent) => (
+            <div
+              key={agent.id}
+              className="rounded-lg p-4 relative group"
+              style={{
+                backgroundColor: "#111118",
+                border: `1px solid ${agent.accent}28`,
+                boxShadow: `0 0 20px ${agent.accent}0a`,
+              }}
+            >
+              {/* Edit / Delete buttons — appear on hover */}
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => setEditAgent(agent)}
+                  title="Edit agent"
+                  className="w-6 h-6 flex items-center justify-center rounded text-zinc-600 hover:text-zinc-300 hover:bg-white/5 transition-colors text-xs"
+                >
+                  ✎
+                </button>
+                <button
+                  onClick={() => setDeleteAgent(agent)}
+                  title="Delete agent"
+                  className="w-6 h-6 flex items-center justify-center rounded text-zinc-700 hover:text-red-400 hover:bg-red-500/5 transition-colors text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div
+                  className="flex items-center justify-center rounded-md text-xl shrink-0"
+                  style={{ width: "40px", height: "40px", backgroundColor: `${agent.accent}18` }}
+                >
+                  {agent.emoji}
+                </div>
+                <div className="flex-1 min-w-0 space-y-1.5 pr-8">
+                  <div>
+                    <span className="text-sm font-bold text-white">{agent.name}</span>
+                    <span className="text-xs ml-2" style={{ color: agent.accent }}>{agent.role}</span>
+                  </div>
+                  <p className="text-xs text-zinc-500 leading-relaxed line-clamp-2">{agent.description}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {agent.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 rounded-full text-xs"
+                        style={{
+                          backgroundColor: `${agent.accent}12`,
+                          color: agent.accent,
+                          border: `1px solid ${agent.accent}25`,
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {otherAgents.length === 0 && (
+            <div
+              className="col-span-2 rounded-lg p-8 text-center"
+              style={{ backgroundColor: "#111118", border: "1px solid #27272a" }}
+            >
+              <p className="text-sm text-zinc-500">No agents yet</p>
+              <p className="text-xs text-zinc-700 mt-1">Click &ldquo;+ New Agent&rdquo; to add one</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Live Sessions Panel */}
       <div
@@ -280,7 +642,6 @@ export default function AgentsPage() {
           style={{ borderColor: `${GREEN}20` }}
         >
           <div className="flex items-center gap-2">
-            {/* Pulsing green dot */}
             <span className="relative flex h-2 w-2">
               <span
                 className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
@@ -428,6 +789,23 @@ export default function AgentsPage() {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      {editAgent !== undefined && (
+        <AgentModal
+          agent={editAgent}
+          onClose={() => setEditAgent(undefined)}
+          onSave={handleSave}
+        />
+      )}
+
+      {deleteAgent && (
+        <DeleteDialog
+          agent={deleteAgent}
+          onClose={() => setDeleteAgent(null)}
+          onConfirm={() => handleDelete(deleteAgent)}
+        />
+      )}
     </div>
   )
 }

@@ -59,5 +59,61 @@
     "tags": [],
     "createdAt": "2026-03-06T05:17:26.157Z",
     "updatedAt": "2026-03-06T05:32:17.743Z"
+  },
+  {
+    "id": "task-1772775715786",
+    "title": "Fix task ID chain through agent activation",
+    "description": "✅ Updated activate endpoint to pass Task ID + completion curl commands directly in the agent brief so agents can self-update the Kanban.",
+    "column": "done",
+    "priority": "high",
+    "assignee": "vic",
+    "tags": [
+      "mission-control",
+      "infra"
+    ],
+    "createdAt": "2026-03-06T05:41:55.786Z",
+    "updatedAt": "2026-03-06T05:41:55.786Z"
+  },
+  {
+    "id": "task-1772775715810",
+    "title": "Set up Scout Signal Watch cron",
+    "description": "✅ Daily 1pm ET cron — scans last 24h for high-signal x402/MoonPay/Solana/OpenClaw news. Only pings Halsey if genuinely notable.",
+    "column": "done",
+    "priority": "high",
+    "assignee": "scout",
+    "tags": [
+      "cron",
+      "monitoring"
+    ],
+    "createdAt": "2026-03-06T05:41:55.810Z",
+    "updatedAt": "2026-03-06T05:41:55.810Z"
+  },
+  {
+    "id": "task-1772775715851",
+    "title": "Set up Baron daily treasury report cron",
+    "description": "✅ Daily 9am ET cron — checks wallet balances, SOL/USDC prices, sends morning treasury summary to Telegram.",
+    "column": "done",
+    "priority": "high",
+    "assignee": "baron",
+    "tags": [
+      "cron",
+      "wallet"
+    ],
+    "createdAt": "2026-03-06T05:41:55.851Z",
+    "updatedAt": "2026-03-06T05:41:55.851Z"
+  },
+  {
+    "id": "task-1772775804559",
+    "title": "Add agent CRUD — edit, delete, create on agents page",
+    "description": "Full agent management: edit agent name/role/description/color, delete agents, create new ones. Persistent storage.",
+    "column": "in-progress",
+    "priority": "high",
+    "assignee": "builder",
+    "tags": [
+      "mission-control",
+      "agents"
+    ],
+    "createdAt": "2026-03-06T05:43:24.559Z",
+    "updatedAt": "2026-03-06T05:43:24.559Z"
   }
 ]
