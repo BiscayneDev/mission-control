@@ -2,12 +2,18 @@ import { NextResponse } from "next/server"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-interface UsageBucket {
+interface UsageResult {
   model: string
-  input_tokens: number
-  output_tokens: number
-  cache_creation_input_tokens: number
+  uncached_input_tokens: number
+  cache_creation?: { ephemeral_1h_input_tokens?: number; ephemeral_5m_input_tokens?: number }
   cache_read_input_tokens: number
+  output_tokens: number
+}
+
+interface UsageBucket {
+  starting_at: string
+  ending_at: string
+  results: UsageResult[]
 }
 
 interface UsageResponse {
@@ -18,7 +24,7 @@ interface UsageResponse {
 
 interface CostResult {
   currency: string
-  amount: string // decimal USD string e.g. "42.25439785"
+  amount: string
 }
 
 interface CostBucket {
@@ -67,22 +73,8 @@ const CACHE_TTL_MS = 5 * 60 * 1000
 let cachedResult: CostsResult | null = null
 let cachedAt = 0
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-
 function emptyResponse(error: string): CostsResult {
-  return {
-    error,
-    totalCostUSD: 0,
-    byModel: [],
-    dailyCosts: [],
-    totalTokens: 0,
-    totalInputTokens: 0,
-    totalOutputTokens: 0,
-    totalCacheCreationTokens: 0,
-    totalCacheReadTokens: 0,
-    dataSource: "none",
-    lastUpdated: null,
-  }
+  return { error, totalCostUSD: 0, byModel: [], dailyCosts: [], totalTokens: 0, totalInputTokens: 0, totalOutputTokens: 0, totalCacheCreationTokens: 0, totalCacheReadTokens: 0, dataSource: "none", lastUpdated: null }
 }
 
 function dateRange() {
@@ -92,26 +84,23 @@ function dateRange() {
 }
 
 function apiHeaders(): Record<string, string> {
-  return {
-    "anthropic-version": "2023-06-01",
-    "x-api-key": process.env.ANTHROPIC_ADMIN_KEY!,
-  }
+  return { "anthropic-version": "2023-06-01", "x-api-key": process.env.ANTHROPIC_ADMIN_KEY! }
 }
 
 async function fetchAllUsage(): Promise<UsageBucket[]> {
   const { starting_at, ending_at } = dateRange()
   const all: UsageBucket[] = []
-  let nextPage: string | null | undefined
+  let pageToken: string | null = null
 
   do {
     const params = new URLSearchParams({ starting_at, ending_at, bucket_width: "1d", "group_by[]": "model" })
-    if (nextPage) params.set("next_page", nextPage)
+    if (pageToken) params.set("page", pageToken)
     const res = await fetch(`https://api.anthropic.com/v1/organizations/usage_report/messages?${params}`, { headers: apiHeaders() })
     if (!res.ok) throw new Error(`Usage API ${res.status}: ${await res.text()}`)
     const data = (await res.json()) as UsageResponse
     all.push(...data.data)
-    nextPage = data.has_more ? data.next_page : null
-  } while (nextPage)
+    pageToken = data.has_more && data.next_page ? data.next_page : null
+  } while (pageToken)
 
   return all
 }
@@ -119,17 +108,17 @@ async function fetchAllUsage(): Promise<UsageBucket[]> {
 async function fetchAllCosts(): Promise<CostBucket[]> {
   const { starting_at, ending_at } = dateRange()
   const all: CostBucket[] = []
-  let nextPage: string | null | undefined
+  let pageToken: string | null = null
 
   do {
     const params = new URLSearchParams({ starting_at, ending_at, bucket_width: "1d" })
-    if (nextPage) params.set("next_page", nextPage)
+    if (pageToken) params.set("page", pageToken)
     const res = await fetch(`https://api.anthropic.com/v1/organizations/cost_report?${params}`, { headers: apiHeaders() })
     if (!res.ok) throw new Error(`Cost API ${res.status}: ${await res.text()}`)
     const data = (await res.json()) as CostResponse
     all.push(...data.data)
-    nextPage = data.has_more ? data.next_page : null
-  } while (nextPage)
+    pageToken = data.has_more && data.next_page ? data.next_page : null
+  } while (pageToken)
 
   return all
 }
@@ -148,23 +137,32 @@ export async function GET() {
   try {
     const [usageBuckets, costBuckets] = await Promise.all([fetchAllUsage(), fetchAllCosts()])
 
-    // Aggregate usage by model
+    // Aggregate usage by model — real field names from the API
     const modelMap = new Map<string, ModelSummary>()
-    for (const b of usageBuckets) {
-      const e = modelMap.get(b.model) ?? { model: b.model, inputTokens: 0, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0, totalTokens: 0 }
-      const inp = b.input_tokens ?? 0
-      const out = b.output_tokens ?? 0
-      const cc = b.cache_creation_input_tokens ?? 0
-      const cr = b.cache_read_input_tokens ?? 0
-      modelMap.set(b.model, { model: b.model, inputTokens: e.inputTokens + inp, outputTokens: e.outputTokens + out, cacheCreationTokens: e.cacheCreationTokens + cc, cacheReadTokens: e.cacheReadTokens + cr, totalTokens: e.totalTokens + inp + out + cc + cr })
+    for (const bucket of usageBuckets) {
+      for (const r of bucket.results) {
+        const e = modelMap.get(r.model) ?? { model: r.model, inputTokens: 0, outputTokens: 0, cacheCreationTokens: 0, cacheReadTokens: 0, totalTokens: 0 }
+        const inp = r.uncached_input_tokens ?? 0
+        const out = r.output_tokens ?? 0
+        const cr = r.cache_read_input_tokens ?? 0
+        const cc = (r.cache_creation?.ephemeral_1h_input_tokens ?? 0) + (r.cache_creation?.ephemeral_5m_input_tokens ?? 0)
+        modelMap.set(r.model, {
+          model: r.model,
+          inputTokens: e.inputTokens + inp,
+          outputTokens: e.outputTokens + out,
+          cacheCreationTokens: e.cacheCreationTokens + cc,
+          cacheReadTokens: e.cacheReadTokens + cr,
+          totalTokens: e.totalTokens + inp + out + cc + cr,
+        })
+      }
     }
     const byModel = Array.from(modelMap.values()).sort((a, b) => b.totalTokens - a.totalTokens)
 
-    // Aggregate daily costs — amount is real USD (not cents)
+    // Aggregate daily costs
     const dailyMap = new Map<string, number>()
-    for (const b of costBuckets) {
-      const date = b.starting_at.slice(0, 10)
-      const dayTotal = b.results.reduce((s, r) => s + parseFloat(r.amount), 0)
+    for (const bucket of costBuckets) {
+      const date = bucket.starting_at.slice(0, 10)
+      const dayTotal = bucket.results.reduce((s, r) => s + parseFloat(r.amount), 0)
       dailyMap.set(date, (dailyMap.get(date) ?? 0) + dayTotal)
     }
     const dailyCosts: DailyCost[] = Array.from(dailyMap.entries())
