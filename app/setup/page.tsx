@@ -460,7 +460,7 @@ function SailboatScene() {
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#6d28d9")}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#7c3aed")}
               >
-                Meet your team →
+                Set Sail →
               </button>
 
               {/* Role cards — generic, not my specific agents */}
