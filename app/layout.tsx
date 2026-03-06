@@ -1,41 +1,25 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
-import { ToastProvider } from "@/components/ToastProvider";
+import type { Metadata } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
+import "./globals.css"
+import { ConditionalLayout } from "@/components/ConditionalLayout"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Mission Control",
-  description: "AI agent mission control dashboard",
-};
+  title: "Shipyard OS",
+  description: "The open-source Agent OS for solo founders",
+}
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         style={{ backgroundColor: "#0a0a0f", color: "#e4e4e7" }}
       >
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">{children}</main>
-        </div>
-        <ToastProvider />
+        <ConditionalLayout>{children}</ConditionalLayout>
       </body>
     </html>
-  );
+  )
 }
