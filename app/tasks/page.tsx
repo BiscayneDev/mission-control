@@ -92,7 +92,9 @@ function TaskCard({ task, accent, isDragging, draggableProps, dragHandleProps, i
       className="group rounded-lg p-4 space-y-3 transition-shadow"
       style={{
         backgroundColor: "#111118",
-        border: `1px solid ${isDragging ? `${accent}60` : "#1a1a2e"}`,
+        borderTop: `1px solid ${isDragging ? `${accent}60` : "#1a1a2e"}`,
+        borderRight: `1px solid ${isDragging ? `${accent}60` : "#1a1a2e"}`,
+        borderBottom: `1px solid ${isDragging ? `${accent}60` : "#1a1a2e"}`,
         borderLeft: `3px solid ${PRIORITY_CONFIG[task.priority].border}`,
         boxShadow: isDragging ? `0 0 20px ${accent}20` : "none",
         ...(draggableProps as { style?: React.CSSProperties }).style,
