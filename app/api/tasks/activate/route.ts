@@ -32,7 +32,15 @@ export async function POST(request: Request) {
       `Suggested agent: ${agentName}`,
       `Task ID: ${taskId}`,
       ``,
-      `As Chief of Staff: read this task, improve and expand it into a proper brief, then delegate to the right agent (or handle yourself). Update the task card with your plan. Do not ask me to clarify — use your judgment and act.`,
+      `As Chief of Staff:`,
+      `1. Enrich this into a proper brief`,
+      `2. Delegate to the right agent (pass them the Task ID: ${taskId})`,
+      `3. Agent must call these when done:`,
+      `   PATCH http://localhost:3000/api/tasks/${taskId} with {"column":"done","description":"✅ summary"}`,
+      `   POST http://localhost:3000/api/notify with {"agent":"[name]","message":"✅ Done: ${title}","type":"finish"}`,
+      `   POST http://localhost:3000/api/activity with {"taskId":"${taskId}","taskTitle":"${title}","agent":"[name]","action":"completed","summary":"..."}`,
+      ``,
+      `Do not ask for clarification — act now.`,
     ].filter(Boolean).join("\n")
 
     execFileAsync(OPENCLAW, [

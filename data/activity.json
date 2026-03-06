@@ -1,5 +1,22 @@
 [
   {
+    "id": "8b11e703-f496-4680-86f5-efd1d244ed02",
+    "taskId": "task-1772774246157",
+    "taskTitle": "Add activity feed",
+    "agent": "builder",
+    "action": "completed",
+    "summary": "Built /activity timeline page with auto-logging, dashboard strip, sidebar link",
+    "timestamp": "2026-03-06T05:32:17.900Z"
+  },
+  {
+    "id": "844146e3-ed14-4df3-9b4e-39113e20908c",
+    "taskId": "task-1772774246157",
+    "taskTitle": "Add activity feed so we can see all that gets shipped /done and by what agent. ",
+    "agent": "vic",
+    "action": "completed",
+    "timestamp": "2026-03-06T05:32:17.747Z"
+  },
+  {
     "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "taskId": "seed-task-1",
     "taskTitle": "Deploy Scout market intelligence pipeline",
