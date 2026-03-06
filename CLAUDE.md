@@ -85,6 +85,13 @@ Google Calendar upcoming events:
 ### `/intel`
 Scout's market intelligence reports with deploy button.
 
+### `/company`
+Company overview page with 4 sections:
+- **Mission statement** — Biscayne Ventures mission card with purple accent
+- **Org chart** — Visual tree: Halsey → Vic → 4 agents
+- **Agent budgets** — Monthly spend vs hardcoded budgets (via `/api/company/budgets`)
+- **Goals** — Editable goal tracker stored in `data/goals.json`
+
 ## API Routes
 
 | Route | Method | Description |
@@ -100,6 +107,9 @@ Scout's market intelligence reports with deploy button.
 | `/api/calendar` | GET | Google Calendar events via gog CLI |
 | `/api/skills` | GET | Installed OpenClaw skills |
 | `/api/intel/report` | GET | Latest Scout report |
+| `/api/company/budgets` | GET | Per-agent spend vs budgets |
+| `/api/company/goals` | GET/POST | Goal CRUD (data/goals.json) |
+| `/api/company/goals/[id]` | PATCH/DELETE | Update/delete individual goal |
 | `/api/intel/deploy` | POST | Deploy Scout research run |
 
 ## Architecture Notes
