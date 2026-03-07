@@ -15,10 +15,16 @@ const AGENTS = [
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
+type RuntimeType = "openclaw" | "ollama" | "demo"
+
 interface SetupState {
+  runtimeType: RuntimeType
   gatewayUrl: string
   gatewayToken: string
   gatewayVersion: string
+  ollamaUrl: string
+  ollamaModel: string
+  ollamaModels: string[]
   deliveryChannel: string
   deliveryTarget: string
   workspace: string
@@ -80,9 +86,13 @@ export default function SetupPage() {
   const [agentsVisible, setAgentsVisible] = useState<boolean[]>(Array(5).fill(false))
 
   const [state, setState] = useState<SetupState>({
+    runtimeType: "openclaw",
     gatewayUrl: "http://127.0.0.1:18789",
     gatewayToken: "",
     gatewayVersion: "",
+    ollamaUrl: "http://127.0.0.1:11434",
+    ollamaModel: "",
+    ollamaModels: [],
     deliveryChannel: "telegram",
     deliveryTarget: "",
     workspace: "~/clawd",
@@ -90,6 +100,10 @@ export default function SetupPage() {
     assistantName: "Vic",
     anthropicAdminKey: "",
   })
+
+  // Ollama test state
+  const [ollamaTesting, setOllamaTesting] = useState(false)
+  const [ollamaResult, setOllamaResult] = useState<{ ok: boolean; message: string } | null>(null)
 
   // Gateway test state
   const [gatewayTesting, setGatewayTesting] = useState(false)
@@ -172,6 +186,33 @@ export default function SetupPage() {
     }
   }
 
+  async function testOllama() {
+    setOllamaTesting(true)
+    setOllamaResult(null)
+    try {
+      const res = await fetch("/api/setup/test-ollama", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: state.ollamaUrl }),
+      })
+      const data = await res.json() as { ok: boolean; modelCount?: number; models?: string[]; error?: string }
+      if (data.ok) {
+        setState((s) => ({
+          ...s,
+          ollamaModels: data.models ?? [],
+          ollamaModel: s.ollamaModel || (data.models?.[0] ?? ""),
+        }))
+        setOllamaResult({ ok: true, message: `Connected — ${data.modelCount} model${data.modelCount !== 1 ? "s" : ""} available` })
+      } else {
+        setOllamaResult({ ok: false, message: data.error || "Connection failed" })
+      }
+    } catch {
+      setOllamaResult({ ok: false, message: "Network error — is Ollama running?" })
+    } finally {
+      setOllamaTesting(false)
+    }
+  }
+
   async function testDelivery() {
     setDeliveryTesting(true)
     setDeliveryResult(null)
@@ -226,8 +267,11 @@ export default function SetupPage() {
         body: JSON.stringify({
           userName: state.userName,
           assistantName: state.assistantName,
-          gatewayUrl: state.gatewayUrl,
-          gatewayToken: state.gatewayToken,
+          runtimeType: demoMode ? "demo" : state.runtimeType,
+          gatewayUrl: state.runtimeType === "openclaw" ? state.gatewayUrl : undefined,
+          gatewayToken: state.runtimeType === "openclaw" ? state.gatewayToken : undefined,
+          ollamaUrl: state.runtimeType === "ollama" ? state.ollamaUrl : undefined,
+          ollamaModel: state.runtimeType === "ollama" ? state.ollamaModel : undefined,
           deliveryTarget: state.deliveryTarget,
           deliveryChannel: state.deliveryChannel,
           workspace: state.workspace,
@@ -237,10 +281,10 @@ export default function SetupPage() {
       })
       const data = await res.json() as { ok: boolean; envWritten?: boolean }
       setEnvWritten(data.envWritten ?? false)
-      goTo(6)
+      goTo(7)
     } catch {
       // Still proceed
-      goTo(6)
+      goTo(7)
     } finally {
       setSaving(false)
     }
@@ -260,14 +304,20 @@ export default function SetupPage() {
     }
   }
 
-  const envLines = [
-    `OPENCLAW_GATEWAY_URL=${state.gatewayUrl}`,
-    `OPENCLAW_GATEWAY_TOKEN=${state.gatewayToken}`,
+  const envLines: string[] = [`AGENT_RUNTIME=${state.runtimeType}`]
+  if (state.runtimeType === "openclaw") {
+    envLines.push(`OPENCLAW_GATEWAY_URL=${state.gatewayUrl}`)
+    envLines.push(`OPENCLAW_GATEWAY_TOKEN=${state.gatewayToken}`)
+  } else if (state.runtimeType === "ollama") {
+    envLines.push(`OLLAMA_BASE_URL=${state.ollamaUrl}`)
+    envLines.push(`OLLAMA_MODEL=${state.ollamaModel}`)
+  }
+  envLines.push(
     `AGENT_DELIVERY_TARGET=${state.deliveryTarget}`,
     `AGENT_DELIVERY_CHANNEL=${state.deliveryChannel}`,
     `AGENT_WORKSPACE=${state.workspace}`,
     `NEXT_PUBLIC_MC_URL=http://localhost:3000`,
-  ]
+  )
   if (state.anthropicAdminKey) {
     envLines.push(`ANTHROPIC_ADMIN_KEY=${state.anthropicAdminKey}`)
   }
@@ -281,14 +331,20 @@ export default function SetupPage() {
     ? state.anthropicAdminKey.slice(0, 12) + "•".repeat(Math.max(0, state.anthropicAdminKey.length - 12))
     : ""
 
-  const envMaskedLines = [
-    `OPENCLAW_GATEWAY_URL=${state.gatewayUrl}`,
-    `OPENCLAW_GATEWAY_TOKEN=${showEnvToken ? state.gatewayToken : maskedToken}`,
+  const envMaskedLines: string[] = [`AGENT_RUNTIME=${state.runtimeType}`]
+  if (state.runtimeType === "openclaw") {
+    envMaskedLines.push(`OPENCLAW_GATEWAY_URL=${state.gatewayUrl}`)
+    envMaskedLines.push(`OPENCLAW_GATEWAY_TOKEN=${showEnvToken ? state.gatewayToken : maskedToken}`)
+  } else if (state.runtimeType === "ollama") {
+    envMaskedLines.push(`OLLAMA_BASE_URL=${state.ollamaUrl}`)
+    envMaskedLines.push(`OLLAMA_MODEL=${state.ollamaModel}`)
+  }
+  envMaskedLines.push(
     `AGENT_DELIVERY_TARGET=${state.deliveryTarget}`,
     `AGENT_DELIVERY_CHANNEL=${state.deliveryChannel}`,
     `AGENT_WORKSPACE=${state.workspace}`,
     `NEXT_PUBLIC_MC_URL=http://localhost:3000`,
-  ]
+  )
   if (state.anthropicAdminKey) {
     envMaskedLines.push(`ANTHROPIC_ADMIN_KEY=${showEnvToken ? state.anthropicAdminKey : maskedAdminKey}`)
   }
@@ -451,7 +507,7 @@ function SailboatScene() {
         boxShadow: "0 32px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03) inset",
       }}>
         {/* Progress dots — hidden on welcome and done */}
-        {step > 0 && step < 6 && <ProgressDots step={step} total={7} />}
+        {step > 0 && step < 7 && <ProgressDots step={step} total={8} />}
 
         <StepWrapper visible={visible}>
           {/* ── Step 0: Welcome ──────────────────────────────────────────── */}
@@ -541,8 +597,92 @@ function SailboatScene() {
             </div>
           )}
 
-          {/* ── Step 1: OpenClaw Connection ─────────────────────────────── */}
+          {/* ── Step 1: Choose Runtime ──────────────────────────────────── */}
           {step === 1 && (
+            <div>
+              <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Choose your runtime</h2>
+              <p style={{ color: "#a1a1aa", marginBottom: 32, lineHeight: 1.6 }}>
+                How do you want to run your AI agents?
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {([
+                  {
+                    id: "openclaw" as RuntimeType,
+                    title: "OpenClaw",
+                    desc: "Full agent runtime with sessions, delivery, and multi-agent orchestration",
+                    color: "#7c3aed",
+                    icon: "⚓",
+                  },
+                  {
+                    id: "ollama" as RuntimeType,
+                    title: "Ollama / Local Models",
+                    desc: "Run local LLMs (Llama, Mistral, Codellama) — works with LM Studio & llama.cpp too",
+                    color: "#10b981",
+                    icon: "🦙",
+                  },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setState((s) => ({ ...s, runtimeType: opt.id }))}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                      padding: "16px 20px",
+                      borderRadius: 12,
+                      border: state.runtimeType === opt.id
+                        ? `2px solid ${opt.color}`
+                        : "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: state.runtimeType === opt.id
+                        ? `${opt.color}11`
+                        : "rgba(255,255,255,0.03)",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span style={{ fontSize: 28 }}>{opt.icon}</span>
+                    <div>
+                      <div style={{ fontWeight: 600, color: "#e4e4e7", fontSize: 15 }}>{opt.title}</div>
+                      <div style={{ color: "#71717a", fontSize: 13, marginTop: 2 }}>{opt.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div style={navRowStyle}>
+                <button onClick={back} style={backBtnStyle}>
+                  ← Back
+                </button>
+                <button
+                  onClick={() => {
+                    setState((s) => ({ ...s, runtimeType: "demo" }))
+                    saveAndFinish(true)
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#71717a",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    padding: "8px 12px",
+                  }}
+                >
+                  Skip — explore without agents
+                </button>
+                <button
+                  onClick={next}
+                  style={primaryBtnStyle(false)}
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 2: Connect Runtime (OpenClaw or Ollama) ────────────── */}
+          {step === 2 && state.runtimeType === "openclaw" && (
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Connect OpenClaw</h2>
               <p style={{ color: "#a1a1aa", marginBottom: 32, lineHeight: 1.6 }}>
@@ -637,19 +777,6 @@ function SailboatScene() {
                   ← Back
                 </button>
                 <button
-                  onClick={() => goTo(4)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#71717a",
-                    cursor: "pointer",
-                    fontSize: 13,
-                    padding: "8px 12px",
-                  }}
-                >
-                  Skip — explore without agents
-                </button>
-                <button
                   onClick={next}
                   disabled={!canGoNextGateway}
                   style={primaryBtnStyle(!canGoNextGateway)}
@@ -660,8 +787,94 @@ function SailboatScene() {
             </div>
           )}
 
-          {/* ── Step 2: Delivery Channel ─────────────────────────────────── */}
-          {step === 2 && (
+          {step === 2 && state.runtimeType === "ollama" && (
+            <div>
+              <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Connect Ollama</h2>
+              <p style={{ color: "#a1a1aa", marginBottom: 32, lineHeight: 1.6 }}>
+                Point Shipyard OS at your local model server. Works with Ollama, LM Studio, or any OpenAI-compatible endpoint.
+              </p>
+
+              <label style={labelStyle}>Ollama URL</label>
+              <input
+                style={inputStyle}
+                type="text"
+                value={state.ollamaUrl}
+                onChange={(e) => {
+                  setState((s) => ({ ...s, ollamaUrl: e.target.value }))
+                  setOllamaResult(null)
+                }}
+                placeholder="http://127.0.0.1:11434"
+              />
+
+              <div style={{ marginTop: 24, display: "flex", gap: 12, alignItems: "center" }}>
+                <button
+                  onClick={testOllama}
+                  disabled={ollamaTesting || !state.ollamaUrl}
+                  style={secondaryBtnStyle(ollamaTesting || !state.ollamaUrl)}
+                >
+                  {ollamaTesting ? (
+                    <><Spinner /> Testing...</>
+                  ) : (
+                    "Test Connection"
+                  )}
+                </button>
+              </div>
+
+              {ollamaResult && (
+                <div
+                  style={{
+                    marginTop: 16,
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    backgroundColor: ollamaResult.ok ? "#052e16" : "#2d0a0a",
+                    border: `1px solid ${ollamaResult.ok ? "#22c55e44" : "#ef444444"}`,
+                    color: ollamaResult.ok ? "#22c55e" : "#ef4444",
+                    fontSize: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  {ollamaResult.ok ? "✓" : "✗"} {ollamaResult.message}
+                </div>
+              )}
+
+              {ollamaResult?.ok && state.ollamaModels.length > 0 && (
+                <div style={{ marginTop: 20 }}>
+                  <label style={labelStyle}>Model</label>
+                  <select
+                    style={{ ...inputStyle, cursor: "pointer" }}
+                    value={state.ollamaModel}
+                    onChange={(e) => setState((s) => ({ ...s, ollamaModel: e.target.value }))}
+                  >
+                    {state.ollamaModels.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <p style={helpTextStyle}>
+                Run <code style={codeStyle}>ollama serve</code> to start Ollama, then <code style={codeStyle}>ollama pull llama3.2</code> to download a model.
+              </p>
+
+              <div style={navRowStyle}>
+                <button onClick={back} style={backBtnStyle}>
+                  ← Back
+                </button>
+                <button
+                  onClick={next}
+                  disabled={!ollamaResult?.ok}
+                  style={primaryBtnStyle(!ollamaResult?.ok)}
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 3: Delivery Channel ─────────────────────────────────── */}
+          {step === 3 && (
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
                 Connect your channel
@@ -761,8 +974,8 @@ function SailboatScene() {
             </div>
           )}
 
-          {/* ── Step 3: Workspace ────────────────────────────────────────── */}
-          {step === 3 && (
+          {/* ── Step 4: Workspace ────────────────────────────────────────── */}
+          {step === 4 && (
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Agent Workspace</h2>
               <p style={{ color: "#a1a1aa", marginBottom: 32, lineHeight: 1.6 }}>
@@ -871,8 +1084,8 @@ function SailboatScene() {
             </div>
           )}
 
-          {/* ── Step 4: Identity ─────────────────────────────────────────── */}
-          {step === 4 && (
+          {/* ── Step 5: Identity ─────────────────────────────────────────── */}
+          {step === 5 && (
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Make it yours</h2>
               <p style={{ color: "#a1a1aa", marginBottom: 32, lineHeight: 1.6 }}>
@@ -912,8 +1125,8 @@ function SailboatScene() {
             </div>
           )}
 
-          {/* ── Step 5: API Keys ──────────────────────────────────────────── */}
-          {step === 5 && (
+          {/* ── Step 6: API Keys ──────────────────────────────────────────── */}
+          {step === 6 && (
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>API Keys</h2>
               <p style={{ color: "#a1a1aa", marginBottom: 32, lineHeight: 1.6 }}>
@@ -978,7 +1191,7 @@ function SailboatScene() {
                   Skip
                 </button>
                 <button
-                  onClick={() => saveAndFinish(!gatewayResult?.ok)}
+                  onClick={() => saveAndFinish(false)}
                   disabled={saving}
                   style={primaryBtnStyle(saving)}
                 >
@@ -994,8 +1207,8 @@ function SailboatScene() {
             </div>
           )}
 
-          {/* ── Step 6: Done + Health Checks ────────────────────────────── */}
-          {step === 6 && (
+          {/* ── Step 7: Done + Health Checks ────────────────────────────── */}
+          {step === 7 && (
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>⚓</div>
               <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>You&apos;re all set.</h2>

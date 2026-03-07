@@ -8,8 +8,11 @@ const ENV_LOCAL_PATH = join(process.cwd(), ".env.local")
 interface SetupPayload {
   userName?: string
   assistantName?: string
+  runtimeType?: string
   gatewayUrl?: string
   gatewayToken?: string
+  ollamaUrl?: string
+  ollamaModel?: string
   deliveryTarget?: string
   deliveryChannel?: string
   workspace?: string
@@ -24,13 +27,18 @@ export async function POST(request: Request) {
     const body = await request.json() as SetupPayload
     const isDemoMode = body.demoMode === true
 
+    const runtimeType = isDemoMode ? "demo" : (body.runtimeType || "openclaw")
+
     // Store only non-secret config in setup.json
     const data = {
       completed: true,
       demoMode: isDemoMode,
+      runtimeType,
       userName: body.userName || "",
       assistantName: body.assistantName || "Vic",
       gatewayUrl: isDemoMode ? "" : (body.gatewayUrl || ""),
+      ollamaUrl: runtimeType === "ollama" ? (body.ollamaUrl || "http://127.0.0.1:11434") : "",
+      ollamaModel: runtimeType === "ollama" ? (body.ollamaModel || "") : "",
       deliveryTarget: isDemoMode ? "" : (body.deliveryTarget || ""),
       deliveryChannel: isDemoMode ? "" : (body.deliveryChannel || "telegram"),
       workspace: body.workspace || "~/clawd",
@@ -42,9 +50,14 @@ export async function POST(request: Request) {
 
     // Auto-create .env.local with secrets + config
     if (!isDemoMode) {
-      const envLines: string[] = []
-      if (body.gatewayUrl) envLines.push(`OPENCLAW_GATEWAY_URL=${body.gatewayUrl}`)
-      if (body.gatewayToken) envLines.push(`OPENCLAW_GATEWAY_TOKEN=${body.gatewayToken}`)
+      const envLines: string[] = [`AGENT_RUNTIME=${runtimeType}`]
+      if (runtimeType === "openclaw") {
+        if (body.gatewayUrl) envLines.push(`OPENCLAW_GATEWAY_URL=${body.gatewayUrl}`)
+        if (body.gatewayToken) envLines.push(`OPENCLAW_GATEWAY_TOKEN=${body.gatewayToken}`)
+      } else if (runtimeType === "ollama") {
+        envLines.push(`OLLAMA_BASE_URL=${body.ollamaUrl || "http://127.0.0.1:11434"}`)
+        if (body.ollamaModel) envLines.push(`OLLAMA_MODEL=${body.ollamaModel}`)
+      }
       if (body.deliveryTarget) envLines.push(`AGENT_DELIVERY_TARGET=${body.deliveryTarget}`)
       if (body.deliveryChannel) envLines.push(`AGENT_DELIVERY_CHANNEL=${body.deliveryChannel}`)
       if (body.workspace) envLines.push(`AGENT_WORKSPACE=${body.workspace}`)
