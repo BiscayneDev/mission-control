@@ -8,7 +8,7 @@
 
 Drag a task → your agents execute → the board reflects reality.
 
-[Get Started](#-quickstart) · [Features](#-features) · [Demo](https://shipyard-os.vercel.app) · [Roadmap](#-roadmap) · [Discord](https://discord.gg/shipyard)
+[Get Started](#-quickstart) · [Features](#-features) · [Demo](https://shipyard-os.vercel.app) · [Roadmap](#-roadmap)
 
 <br />
 

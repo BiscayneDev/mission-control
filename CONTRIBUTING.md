@@ -54,4 +54,4 @@ Open a [GitHub Issue](https://github.com/BiscayneDev/shipyard-os/issues) with:
 
 ## Questions?
 
-Open a discussion or join the [Discord](https://discord.gg/shipyard).
+Open a [GitHub Discussion](https://github.com/BiscayneDev/shipyard-os/discussions) or file an issue.
