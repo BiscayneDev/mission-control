@@ -1,9 +1,10 @@
 {
   "name": "create-shipyard-app",
-  "version": "0.1.0",
+  "version": "0.1.5",
+  "type": "module",
   "description": "Create a new Shipyard OS project — the open-source Agent OS",
   "bin": {
-    "create-shipyard-app": "./index.mjs"
+    "create-shipyard-app": "cli.js"
   },
   "keywords": [
     "ai",
@@ -28,6 +29,6 @@
     "node": ">=18"
   },
   "files": [
-    "index.mjs"
+    "cli.js"
   ]
 }
