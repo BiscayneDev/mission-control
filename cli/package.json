@@ -1,6 +1,6 @@
 {
   "name": "create-shipyard-app",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "type": "module",
   "description": "Create a new Shipyard OS project — the open-source Agent OS",
   "bin": {
