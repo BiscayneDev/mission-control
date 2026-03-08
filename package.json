@@ -2,6 +2,9 @@
   "name": "shipyard-os",
   "version": "0.1.0",
   "private": true,
+  "bin": {
+    "shipyard": "bin/shipyard.js"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
